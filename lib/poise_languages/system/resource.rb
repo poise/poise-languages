@@ -36,21 +36,15 @@ module PoiseLanguages
       provides(:poise_languages_system)
       actions(:install, :upgrade, :uninstall)
 
-      # @!attribute candidate_packages
-      #   Array of potential candidate package names. This should be all
-      #   that could potentially match the {version} prefix.
-      #   @return [Array<String>]
-      attribute(:candidate_packages, kind_of: Array, default: lazy { [] })
+      # @!attribute package_name
+      #   Name of the main package for the language.
+      #   @return [String]
+      attribute(:package_name, kind_of: String, name_attribute: true)
       # @!attribute dev_package
       #   Name of the development headers package, or false to disable
       #   installing headers. By default computed from {package_name}.
       #   @return [String, false]
       attribute(:dev_package, kind_of: [String, FalseClass], default: lazy { default_dev_package })
-      # @!attribute package_name
-      #   Name of the main package for the language. By default computed from
-      #   {candidate_packages} and {system_packages}.
-      #   @return [String]
-      attribute(:package_name, kind_of: String, default: lazy { default_package_name })
       # @!attribute package_version
       #   Version of the package(s) to install. This is distinct from {version},
       #   and is the specific version package version, not the language version.
@@ -61,28 +55,11 @@ module PoiseLanguages
       #   Resource for the language runtime. Used only for messages.
       #   @return [Chef::Resource]
       attribute(:parent, kind_of: Chef::Resource, required: true)
-      # @!attribute system_packages
-      #   Array of all packages that exist for this language on the current
-      #   platform.
-      #   @return [Array<String>]
-      attribute(:system_packages, kind_of: Array, default: lazy { [] })
       # @!attributes version
       #   Language version prefix. This prefix determines which version of the
       #   language to install, following prefix matching rules.
       #   @return [String]
       attribute(:version, kind_of: String, default: '')
-
-      # Compute the default package name for the language.
-      #
-      # @return [String]
-      def default_package_name
-        # Find the first value on candidate_packages that is in system_packages.
-        candidate_packages.each do |name|
-          return name if system_packages.include?(name)
-        end
-        # No valid candidate. Sad trombone.
-        raise PoiseLanguages::Error.new("Unable to find a candidate package for version #{version.inspect}. Please set package_name provider option for #{parent}.")
-      end
 
       # Compute the default package name for the development headers.
       #
