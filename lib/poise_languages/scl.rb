@@ -16,8 +16,9 @@
 
 
 module PoiseLanguages
-  autoload :Error, 'poise_languages/error'
-  autoload :Scl, 'poise_languages/scl'
-  autoload :System, 'poise_languages/system'
-  autoload :VERSION, 'poise_languages/version'
+  module Scl
+    autoload :Mixin, 'poise_languages/scl/mixin'
+    autoload :Resource, 'poise_languages/scl/resource'
+    autoload :Provider, 'poise_languages/scl/resource'
+  end
 end
