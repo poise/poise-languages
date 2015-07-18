@@ -28,12 +28,14 @@ module PoiseLanguages
       # @api public
       # @return [PoiseLanguages::System::Resource]
       def install_system_packages
+        dev_package_overrides = system_dev_package_overrides
         poise_languages_system options['package_name'] || system_package_name do
           # Otherwise use the default install action.
           action(:upgrade) if options['package_upgrade']
           parent new_resource
           # Don't pass true because we want the default computed behavior for that.
           dev_package options['dev_package'] unless options['dev_package'] == true
+          dev_package_overrides dev_package_overrides
           package_version options['package_version'] if options['package_version']
           version options['version']
         end
@@ -79,6 +81,14 @@ module PoiseLanguages
         end
         # No valid candidate. Sad trombone.
         raise PoiseLanguages::Error.new("Unable to find a candidate package for version #{options['version'].to_s.inspect}. Please set package_name provider option for #{new_resource}.")
+      end
+
+      # A hash mapping package names to their override dev package name.
+      #
+      # @api public
+      # @return [Hash<String, String>]
+      def system_dev_package_overrides
+        {}
       end
 
       module ClassMethods

@@ -45,6 +45,11 @@ module PoiseLanguages
       #   installing headers. By default computed from {package_name}.
       #   @return [String, false]
       attribute(:dev_package, kind_of: [String, FalseClass], default: lazy { default_dev_package })
+      # @!attribute dev_package_overrides
+      #   A hash of override names for dev packages that don't match the normal
+      #   naming scheme.
+      #   @return [Hash<String, String>]
+      attribute(:dev_package_overrides, kind_of: Hash, default: lazy { {} })
       # @!attribute package_version
       #   Version of the package(s) to install. This is distinct from {version},
       #   and is the specific version package version, not the language version.
@@ -65,6 +70,8 @@ module PoiseLanguages
       #
       # @return [String]
       def default_dev_package
+        # Check for an override.
+        return dev_package_overrides[package_name] if dev_package_overrides.include?(package_name)
         suffix = node.value_for_platform_family(debian: '-dev', rhel: '-devel', fedora: '-devel')
         # Platforms like Arch and Gentoo don't need this anyway. I've got no
         # clue how Amazon Linux does this.
