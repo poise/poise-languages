@@ -25,6 +25,7 @@ module PoiseLanguages
       def install_scl_package
         pkg = scl_package
         poise_languages_scl pkg[:name] do
+          parent new_resource
           url pkg[:url]
         end
       end
