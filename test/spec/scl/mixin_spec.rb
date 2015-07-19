@@ -16,7 +16,7 @@
 
 require 'spec_helper'
 
-describe PoiseLanguages::SclProviderMixin do
+describe PoiseLanguages::Scl::Mixin do
   let(:klass) do
     mixin = described_class
     Class.new do
