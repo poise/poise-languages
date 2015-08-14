@@ -16,6 +16,7 @@
 
 require 'shellwords'
 
+require 'chef/mixin/shell_out'
 require 'chef/mixin/which'
 require 'poise'
 
@@ -153,6 +154,8 @@ module PoiseLanguages
 
       # A mixin for providers that run language commands.
       module Provider
+        include Chef::Mixin::ShellOut
+
         private
 
         # Run a command using the configured language via `shell_out`.
