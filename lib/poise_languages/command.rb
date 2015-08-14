@@ -16,9 +16,10 @@
 
 
 module PoiseLanguages
-  autoload :Command, 'poise_languages/command'
-  autoload :Error, 'poise_languages/error'
-  autoload :Scl, 'poise_languages/scl'
-  autoload :System, 'poise_languages/system'
-  autoload :VERSION, 'poise_languages/version'
+  # A namespace for language-command-related stuff.
+  #
+  # @since 1.0.0
+  module Command
+    autoload :Mixin, 'poise_languages/command/mixin'
+  end
 end
