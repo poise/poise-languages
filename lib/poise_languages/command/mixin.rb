@@ -94,7 +94,7 @@ module PoiseLanguages
           if parent
             parent.send(:"#{name}_binary")
           else
-            which(name)
+            which(name.to_s)
           end
         end
 
