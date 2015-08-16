@@ -179,7 +179,7 @@ module PoiseLanguages
           options[:timeout] ||= new_resource.timeout
           command = if command_args.length == 1 && command_args.first.is_a?(String)
             # String mode, sigh.
-            "#{new_resource.send(name)} #{command_args.first}"
+            "#{Shellwords.escape(new_resource.send(name))} #{command_args.first}"
           else
             # Array mode. Handle both ('one', 'two') and (['one', 'two']).
             [new_resource.send(name)] + command_args.flatten
