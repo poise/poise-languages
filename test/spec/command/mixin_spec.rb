@@ -53,6 +53,16 @@ describe PoiseLanguages::Command::Mixin do
         end
         it { is_expected.to run_poise_test('test').with(parent_mylang: nil) }
       end # /context with no parent
+
+      context 'with two containers' do
+        recipe do
+          mylang_runtime 'parent'
+          poise_test 'test'
+          mylang_runtime 'other'
+        end
+
+        it { is_expected.to run_poise_test('test').with(parent_mylang: chef_run.mylang_runtime('parent')) }
+      end # /context with two containers
     end # /describe #parent_$name
 
     describe '#timeout' do
