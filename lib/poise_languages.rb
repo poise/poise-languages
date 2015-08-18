@@ -20,5 +20,6 @@ module PoiseLanguages
   autoload :Error, 'poise_languages/error'
   autoload :Scl, 'poise_languages/scl'
   autoload :System, 'poise_languages/system'
+  autoload :Utils, 'poise_languages/utils'
   autoload :VERSION, 'poise_languages/version'
 end

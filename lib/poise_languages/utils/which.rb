@@ -22,6 +22,8 @@ module PoiseLanguages
     # @since 1.0.0
     # @see Which#which
     module Which
+      extend self
+
       # A replacement for Chef::Mixin::Which#which that allows using something
       # other than an environment variable if needed.
       #
