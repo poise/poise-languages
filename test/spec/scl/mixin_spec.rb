@@ -27,6 +27,7 @@ describe PoiseLanguages::Scl::Mixin do
   describe '#parse_enable_file' do
     let(:content) { '' }
     before do
+      allow(File).to receive(:exist?).with('/test/enable').and_return(true)
       allow(IO).to receive(:readlines).with('/test/enable').and_return(content.split(/\n/))
     end
     subject { klass.new.send(:parse_enable_file, '/test/enable') }
@@ -56,5 +57,12 @@ EOH
           })
       end
     end # /context with valid data
+
+    context 'with a non-existent file' do
+      before do
+        allow(File).to receive(:exist?).with('/test/enable').and_return(false)
+      end
+      it { is_expected.to eq({}) }
+    end # /context with a non-existent file
   end # /describe #parse_enable_file
 end
