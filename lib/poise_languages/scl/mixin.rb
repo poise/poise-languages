@@ -55,6 +55,9 @@ module PoiseLanguages
       # @param path [String] Path to the enable file.
       # @return [Hash<String, String>]
       def parse_enable_file(path)
+        # Doesn't exist yet, so running Python will fail anyway. Just make sure
+        # it fails in the expected way.
+        return {} unless File.exist?(path)
         # Yes, this is a bash parser in regex. Feel free to be mad at me.
         IO.readlines(path).inject({}) do |memo, line|
           if match = line.match(/^export (\w+)=(.*)$/)
