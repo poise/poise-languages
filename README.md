@@ -1,5 +1,12 @@
 # Poise-Languages Cookbook
 
+[![Build Status](https://img.shields.io/travis/poise/poise-languages.svg)](https://travis-ci.org/poise/poise-languages)
+[![Gem Version](https://img.shields.io/gem/v/poise-languages.svg)](https://rubygems.org/gems/poise-languages)
+[![Cookbook Version](https://img.shields.io/cookbook/v/poise-languages.svg)](https://supermarket.chef.io/cookbooks/poise-languages)
+[![Coverage](https://img.shields.io/codecov/c/github/poise/poise-languages.svg)](https://codecov.io/github/poise/poise-languages)
+[![Gemnasium](https://img.shields.io/gemnasium/poise/poise-languages.svg)](https://gemnasium.com/poise/poise-languages)
+[![License](https://img.shields.io/badge/license-Apache_2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
 Shared support code for Poise's language cookbooks like poise-ruby and
 poise-python.
 
