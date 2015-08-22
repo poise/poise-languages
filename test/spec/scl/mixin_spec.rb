@@ -17,12 +17,90 @@
 require 'spec_helper'
 
 describe PoiseLanguages::Scl::Mixin do
-  let(:klass) do
-    mixin = described_class
-    Class.new do
-      include mixin
-    end
+  resource(:poise_test)
+  provider(:poise_test) do
+    include described_class
   end
+
+  describe '#install_scl_package' do
+    provider(:poise_test) do
+      include Poise
+      include described_class
+      def scl_package
+        {name: 'python34', url: 'http://something.rpm'}
+      end
+      def action_run
+        install_scl_package
+      end
+    end
+    recipe do
+      poise_test 'test'
+    end
+
+    it { is_expected.to install_poise_languages_scl('python34').with(parent: chef_run.poise_test('test'), url: 'http://something.rpm') }
+  end # /describe #install_scl_package
+
+  describe '#uninstall_scl_package' do
+    provider(:poise_test) do
+      include Poise
+      include described_class
+      def scl_package
+        {name: 'python34', url: 'http://something.rpm'}
+      end
+      def action_run
+        uninstall_scl_package
+      end
+    end
+    recipe do
+      poise_test 'test'
+    end
+
+    it { is_expected.to uninstall_poise_languages_scl('python34').with(parent: chef_run.poise_test('test'), url: 'http://something.rpm') }
+  end # /describe #uninstall_scl_package
+
+  describe '#scl_package' do
+    let(:package) { nil }
+    recipe(subject: false) do
+      poise_test 'test'
+    end
+    subject { chef_run.poise_test('test').provider_for_action(:run).send(:scl_package) }
+    before do
+      allow_any_instance_of(provider(:poise_test)).to receive(:options).and_return({})
+      allow(provider(:poise_test)).to receive(:find_scl_package).and_return(package)
+    end
+
+    context 'with a valid package' do
+      let(:package) { {name: 'python34'} }
+      it { is_expected.to eq(package) }
+    end # /context with a valid package
+
+    context 'without a valid package' do
+      it { expect { subject }.to raise_error PoiseLanguages::Error }
+    end # /context without a valid package
+  end # /describe #scl_package
+
+  describe '#scl_folder' do
+    let(:test_provider) { provider(:poise_test).new(nil, nil) }
+    subject { test_provider.send(:scl_folder) }
+    before do
+      allow(test_provider).to receive(:scl_package).and_return({name: 'python34'})
+    end
+
+    it { is_expected.to eq '/opt/rh/python34' }
+  end # /describe #scl_folder
+
+  describe '#scl_environment' do
+    let(:test_provider) { provider(:poise_test).new(nil, nil) }
+    subject { test_provider.send(:scl_environment) }
+    before do
+      allow(test_provider).to receive(:scl_package).and_return({name: 'python34'})
+    end
+
+    it do
+      expect(test_provider).to receive(:parse_enable_file).with('/opt/rh/python34/enable')
+      subject
+    end
+  end # /describe #scl_environment
 
   describe '#parse_enable_file' do
     let(:content) { '' }
@@ -30,7 +108,7 @@ describe PoiseLanguages::Scl::Mixin do
       allow(File).to receive(:exist?).with('/test/enable').and_return(true)
       allow(IO).to receive(:readlines).with('/test/enable').and_return(content.split(/\n/))
     end
-    subject { klass.new.send(:parse_enable_file, '/test/enable') }
+    subject { provider(:poise_test).new(nil, nil).send(:parse_enable_file, '/test/enable') }
 
     context 'with an empty file' do
       it { is_expected.to eq({}) }
@@ -65,4 +143,67 @@ EOH
       it { is_expected.to eq({}) }
     end # /context with a non-existent file
   end # /describe #parse_enable_file
+
+  describe '.provides_auto?' do
+    let(:node) { double('node') }
+    let(:new_resource) { double('resource') }
+    subject { provider(:poise_test).provides_auto?(node, new_resource) }
+    before do
+      allow(provider(:poise_test)).to receive(:inversion_options).with(node, new_resource).and_return({})
+      allow(provider(:poise_test)).to receive(:find_scl_package).with(node, nil).and_return({})
+    end
+    it { is_expected.to be true }
+  end # /describe .provides_auto?
+
+  describe '.find_scl_package' do
+    let(:version) { '' }
+    provider(:poise_test) do
+      include described_class
+      scl_package('3.4.2', 'rh-python34', {
+        ['redhat', 'centos'] => {
+          '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
+          '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-6-x86_64/download/rhscl-rh-python34-epel-6-x86_64.noarch.rpm',
+        },
+      })
+      scl_package('3.3.2', 'python33', {
+        ['redhat', 'centos'] => {
+          '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-7-x86_64/download/rhscl-python33-epel-7-x86_64.noarch.rpm',
+          '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-6-x86_64/download/rhscl-python33-epel-6-x86_64.noarch.rpm',
+        },
+        'fedora' => {
+          '~> 21.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/fedora-21-x86_64/download/rhscl-python33-fedora-21-x86_64.noarch.rpm',
+          '~> 20.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/fedora-20-x86_64/download/rhscl-python33-fedora-20-x86_64.noarch.rpm',
+        },
+      })
+    end
+    subject { provider(:poise_test).send(:find_scl_package, chef_run.node, version) }
+
+    context 'on CentOS 7 with no version' do
+      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      it do
+        is_expected.to include({
+          version: '3.4.2',
+          name: 'rh-python34',
+          url: 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
+        })
+      end
+    end # /context on CentOS 7 with no version
+
+    context 'on CentOS 6 with a version' do
+      let(:version) { '3.3' }
+      let(:chefspec_options) { {platform: 'centos', version: '6.0'} }
+      it do
+        is_expected.to include({
+          version: '3.3.2',
+          name: 'python33',
+          url: 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-6-x86_64/download/rhscl-python33-epel-6-x86_64.noarch.rpm',
+        })
+      end
+    end # /context on CentOS 6 with a version
+
+    context 'on Ubuntu' do
+      let(:chefspec_options) { {platform: 'ubuntu', version: '12.04'} }
+      it { is_expected.to be_nil }
+    end # /context on Ubuntu
+  end # /describe .find_scl_package
 end

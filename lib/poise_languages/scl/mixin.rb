@@ -79,20 +79,22 @@ module PoiseLanguages
           !!find_scl_package(node, version)
         end
 
-        def scl_packages
-          @scl_packages ||= []
-        end
-
-        def scl_package(version, name, urls)
-          scl_packages << {version: version, name: name, urls: urls}
-        end
-
         def find_scl_package(node, version)
           pkg = scl_packages.find {|p| p[:version].start_with?(version) }
           return unless pkg
           pkg[:url] = node.value_for_platform(pkg[:urls])
           return unless pkg[:url]
           pkg
+        end
+
+        private
+
+        def scl_packages
+          @scl_packages ||= []
+        end
+
+        def scl_package(version, name, urls)
+          scl_packages << {version: version, name: name, urls: urls}
         end
 
         def included(klass)

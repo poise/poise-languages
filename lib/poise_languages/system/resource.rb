@@ -112,7 +112,7 @@ module PoiseLanguages
       # @return [void]
       def action_uninstall
         action = node.platform_family?('debian') ? :purge : :remove
-        package_resources.each do |resource|
+        package_resources(action).each do |resource|
           resource.run_action(action)
           new_resource.updated_by_last_action(true) if resource.updated_by_last_action?
         end
@@ -124,7 +124,7 @@ module PoiseLanguages
       # directly and not added to the resource collection.
       #
       # @return [Array<Chef::Resource::Package>]
-      def package_resources
+      def package_resources(action)
         packages = {new_resource.package_name => new_resource.package_version}
         # If we are supposed to install the dev package, grab it using the same
         # version as the main package.
@@ -138,11 +138,15 @@ module PoiseLanguages
           packages.map do |name, version|
             Chef::Resource::Package.new(name, run_context).tap do |r|
               r.version(version)
+              r.action(action)
+              r.declared_type = :package
             end
           end
         else
           [Chef::Resource::Package.new(packages.keys, run_context).tap do |r|
             r.version(packages.values)
+            r.action(action)
+            r.declared_type = :package
           end]
         end
       end
@@ -155,11 +159,12 @@ module PoiseLanguages
       # @param action [Symbol] Action to run on all package resources.
       # @return [void]
       def run_package_action(action)
-        package_resources.each do |resource|
+        package_resources(action).each do |resource|
           # Reset it so we have a clean baseline.
           resource.updated_by_last_action(false)
           # Grab the provider.
           provider = resource.provider_for_action(action)
+          provider.action = action
           # Check the candidate version if needed
           patch_load_current_resource!(provider, new_resource.version)
           # Run our action.
@@ -177,7 +182,7 @@ module PoiseLanguages
       # @return [void]
       def patch_load_current_resource!(provider, version)
         # Create a closure module and inject it.
-        provider.extend Module.new do
+        provider.extend Module.new {
           # Patch load_current_resource to run our verification logic after
           # the normal code.
           define_method(:load_current_resource) do
@@ -189,7 +194,7 @@ module PoiseLanguages
               end
             end
           end
-        end
+        }
       end
 
     end
