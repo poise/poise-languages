@@ -145,7 +145,7 @@ EOH
   end # /describe #parse_enable_file
 
   describe '.provides_auto?' do
-    let(:node) { double('node') }
+    let(:node) { double('node', :"[]" => {'machine' => 'x86_64'}) }
     let(:new_resource) { double('resource') }
     subject { provider(:poise_test).provides_auto?(node, new_resource) }
     before do

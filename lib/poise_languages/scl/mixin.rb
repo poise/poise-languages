@@ -75,6 +75,8 @@ module PoiseLanguages
 
       module ClassMethods
         def provides_auto?(node, resource)
+          # They don't build 32-bit versions for these.
+          return false unless node['kernel']['machine'] == 'x86_64'
           version = inversion_options(node, resource)['version']
           !!find_scl_package(node, version)
         end
