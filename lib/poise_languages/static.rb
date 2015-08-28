@@ -14,13 +14,21 @@
 # limitations under the License.
 #
 
+require 'poise/utils'
+
 
 module PoiseLanguages
-  autoload :Command, 'poise_languages/command'
-  autoload :Error, 'poise_languages/error'
-  autoload :Scl, 'poise_languages/scl'
-  autoload :Static, 'poise_languages/static'
-  autoload :System, 'poise_languages/system'
-  autoload :Utils, 'poise_languages/utils'
-  autoload :VERSION, 'poise_languages/version'
+  # Helpers for installing languages from static archives.
+  #
+  # @since 1.1.0
+  module Static
+    autoload :Mixin, 'poise_languages/static/mixin'
+    autoload :Resource, 'poise_languages/static/resource'
+    autoload :Provider, 'poise_languages/static/resource'
+
+    Poise::Utils.parameterized_module(self) do |opts|
+      require 'poise_languages/static/mixin'
+      include PoiseLanguages::Static::Mixin(opts)
+    end
+  end
 end
