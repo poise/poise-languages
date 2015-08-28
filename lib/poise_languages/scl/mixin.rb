@@ -54,20 +54,22 @@ module PoiseLanguages
       #
       # @param path [String] Path to the enable file.
       # @return [Hash<String, String>]
-      def parse_enable_file(path)
+      def parse_enable_file(path, env={})
         # Doesn't exist yet, so running Python will fail anyway. Just make sure
         # it fails in the expected way.
         return {} unless File.exist?(path)
         # Yes, this is a bash parser in regex. Feel free to be mad at me.
-        IO.readlines(path).inject({}) do |memo, line|
+        IO.readlines(path).inject(env) do |memo, line|
           if match = line.match(/^export (\w+)=(.*)$/)
-            memo[match[1]] = match[2].gsub(/\$\{(\w+)(:\+:\$\{\w+\})?\}/) do
-              if $2
-                ENV[$1] ? ":#{ENV[$1]}" : ''
-              else
-                ENV[$1].to_s
-              end
+            memo[match[1]] = match[2].gsub(/\$(?:\{(\w+)(:\+:\$\{\w+\})?\}|(\w+))/) do
+              key = $1 || $3
+              value = (memo[key] || ENV[key]).to_s
+              value = ":#{value}" if $2 && !value.empty?
+              value
             end
+          elsif match = line.match(/^\. scl_source enable (\w+)$/)
+            # Parse another file.
+            memo.update(parse_enable_file(::File.join('', 'opt', 'rh', match[1], 'enable'), memo))
           end
           memo
         end

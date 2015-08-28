@@ -142,6 +142,43 @@ EOH
       end
       it { is_expected.to eq({}) }
     end # /context with a non-existent file
+
+    context 'with an scl_source line' do
+      # $ cat /opt/rh/nodejs010/enable
+      let(:content) { <<-EOH }
+export PATH=/opt/rh/nodejs010/root/usr/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/opt/rh/nodejs010/root/usr/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+export PYTHONPATH=/opt/rh/nodejs010/root/usr/lib/python2.7/site-packages${PYTHONPATH:+:${PYTHONPATH}}
+export MANPATH=/opt/rh/nodejs010/root/usr/share/man:$MANPATH
+. scl_source enable v8314
+EOH
+      let(:v8_content) { <<-EOH }
+export PATH=/opt/rh/v8314/root/usr/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/opt/rh/v8314/root/usr/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+export PYTHONPATH=/opt/rh/v8314/root/usr/lib/python2.7/site-packages${PYTHONPATH:+:${PYTHONPATH}}
+export MANPATH=/opt/rh/v8314/root/usr/share/man:$MANPATH
+export PKG_CONFIG_PATH=/opt/rh/v8314/root/usr/lib64/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}
+export CPATH=/opt/rh/v8314/root/usr/include${CPATH:+:${CPATH}}
+export LIBRARY_PATH=/opt/rh/v8314/root/usr/lib64${LIBRARY_PATH:+:${LIBRARY_PATH}}
+EOH
+
+      before do
+        allow(File).to receive(:exist?).with('/opt/rh/v8314/enable').and_return(true)
+        allow(IO).to receive(:readlines).with('/opt/rh/v8314/enable').and_return(v8_content.split(/\n/))
+      end
+
+      it do
+        is_expected.to eq({
+          'PATH' => "/opt/rh/v8314/root/usr/bin:/opt/rh/nodejs010/root/usr/bin#{ENV['PATH'] ? ':' + ENV['PATH'] : ''}",
+          'LD_LIBRARY_PATH' => "/opt/rh/v8314/root/usr/lib64:/opt/rh/nodejs010/root/usr/lib64#{ENV['LD_LIBRARY_PATH'] ? ':' + ENV['LD_LIBRARY_PATH'] : ''}",
+          'PYTHONPATH' => "/opt/rh/v8314/root/usr/lib/python2.7/site-packages:/opt/rh/nodejs010/root/usr/lib/python2.7/site-packages#{ENV['PYTHONPATH'] ? ':' + ENV['PYTHONPATH'] : ''}",
+          'MANPATH' => "/opt/rh/v8314/root/usr/share/man:/opt/rh/nodejs010/root/usr/share/man:#{ENV['MANPATH']}",
+          'PKG_CONFIG_PATH' => "/opt/rh/v8314/root/usr/lib64/pkgconfig#{ENV['PKG_CONFIG_PATH'] ? ':' + ENV['PKG_CONFIG_PATH'] : ''}",
+          'CPATH' => "/opt/rh/v8314/root/usr/include#{ENV['CPATH'] ? ':' + ENV['CPATH'] : ''}",
+          'LIBRARY_PATH' => "/opt/rh/v8314/root/usr/lib64#{ENV['LIBRARY_PATH'] ? ':' + ENV['LIBRARY_PATH'] : ''}",
+          })
+      end
+    end # /context with an scl_source line
   end # /describe #parse_enable_file
 
   describe '.provides_auto?' do
