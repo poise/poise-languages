@@ -152,11 +152,16 @@ describe PoiseLanguages::System::Mixin do
 
     context 'on CentOS' do
       let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
-      it { is_expected.to be true}
+      it { is_expected.to be true }
     end # /context on CentOS
 
+    context 'on Windows' do
+      let(:chefspec_options) { {platform: 'windows', version: '2012R2'} }
+      it { is_expected.to be false }
+    end # /context on Windows
+
     context 'on an unknown platform' do
-      it { is_expected.to be false}
+      it { is_expected.to be true }
     end # /context on an unknown platform
   end # /describe .provides_auto?
 

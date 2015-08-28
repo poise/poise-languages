@@ -92,12 +92,13 @@ module PoiseLanguages
       end
 
       module ClassMethods
-        # Install this as a default provider for platforms we are relatively
-        # certain work.
+        # Install this as a default provider if nothing else matched. Might not
+        # work, but worth a try at least for unknown platforms. Windows is a
+        # whole different story, and OS X might work sometimes so at least try.
         #
         # @api private
         def provides_auto?(node, resource)
-          super || node.platform_family?('debian', 'rhel', 'amazon', 'fedora')
+          !node.platform_family?('windows')
         end
 
         # Set some default inversion provider options. Package name can't get
