@@ -136,9 +136,10 @@ module PoiseLanguages
             end
 
             # Create the method to inherit settings from another resource.
-            private define_method(:"#{name}_from_parent") { |resource|
+            define_method(:"#{name}_from_parent") do |resource|
               language_command_runtime_from_parent(name, resource)
-            }
+            end
+            private :"#{name}_from_parent"
           end
 
           # @api private
@@ -205,13 +206,15 @@ module PoiseLanguages
           # @param name [Symbol] Language name.
           # @return [void]
           def language_command_mixin(name)
-            private define_method(:"#{name}_shell_out") { |*command_args|
+            define_method(:"#{name}_shell_out") do |*command_args|
               language_command_shell_out(name, *command_args)
-            }
+            end
+            private :"#{name}_shell_out"
 
-            private define_method(:"#{name}_shell_out!") { |*command_args|
+            define_method(:"#{name}_shell_out!") do |*command_args|
               language_command_shell_out!(name, *command_args)
-            }
+            end
+            private :"#{name}_shell_out!"
           end
 
           # @api private
