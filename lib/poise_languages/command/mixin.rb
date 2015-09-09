@@ -51,7 +51,7 @@ module PoiseLanguages
         # @param runtime [Symbol] Language runtime resource name.
         # @param val [String, Chef::Resource, Poise::NOT_PASSED, nil] Accessor value.
         # @return [String]
-        def language_command_runtime(name, runtime, val=Poise::NOT_PASSED)
+        def language_command_runtime(name, runtime, default_binary, val=Poise::NOT_PASSED)
           unless val == Poise::NOT_PASSED
             path_arg = parent_arg = nil
             # Figure out which property we are setting.
@@ -80,7 +80,7 @@ module PoiseLanguages
             set_or_return(name, path_arg, kind_of: [String, NilClass])
           else
             # Getter behavior. Using the ivar directly is kind of gross but oh well.
-            instance_variable_get(:"@#{name}") || default_language_command_runtime(name)
+            instance_variable_get(:"@#{name}") || default_language_command_runtime(name, default_binary)
           end
         end
 
@@ -89,12 +89,12 @@ module PoiseLanguages
         # @api private
         # @param name [Symbol] Language name.
         # @return [String]
-        def default_language_command_runtime(name)
+        def default_language_command_runtime(name, default_binary)
           parent = send(:"parent_#{name}")
           if parent
             parent.send(:"#{name}_binary")
           else
-            which(name.to_s)
+            which(default_binary || name.to_s)
           end
         end
 
@@ -122,8 +122,9 @@ module PoiseLanguages
           # @param name [Symbol] Language name.
           # @param runtime [Symbol] Language runtime resource name.
           # @param timeout [Boolean] Enable the timeout attribute.
+          # @param default_binary [String] Name of the default language binary.
           # @return [void]
-          def language_command_mixin(name, runtime: :"#{name}_runtime", timeout: true)
+          def language_command_mixin(name, runtime: :"#{name}_runtime", timeout: true, default_binary: nil)
             # Create the parent attribute.
             parent_attribute(name, type: runtime, optional: true)
 
@@ -132,7 +133,7 @@ module PoiseLanguages
 
             # Create the main accessor for the parent/path.
             define_method(name) do |val=Poise::NOT_PASSED|
-              language_command_runtime(name, runtime, val)
+              language_command_runtime(name, runtime, default_binary, val)
             end
 
             # Create the method to inherit settings from another resource.
@@ -140,6 +141,11 @@ module PoiseLanguages
               language_command_runtime_from_parent(name, resource)
             end
             private :"#{name}_from_parent"
+          end
+
+          def language_command_default_binary(val=Poise::NOT_PASSED)
+            @language_command_default_binary = val if val != Poise::NOT_PASSED
+            @language_command_default_binary
           end
 
           # @api private
