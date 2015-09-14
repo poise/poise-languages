@@ -66,4 +66,19 @@ describe PoiseLanguages::Utils::Which do
     let(:executables) { {'/bin/myapp' => false, '/usr/bin/myapp' => false, '/sbin/myapp' => false, '/usr/sbin/myapp' => false} }
     it { is_expected.to be false }
   end # /context with a non-existent command
+
+  context 'with an absolute Unix path' do
+    let(:params) { ['/myapp'] }
+    it { is_expected.to eq '/myapp' }
+  end # /context with an absolute Unix path
+
+  context 'with an absolute Windows path' do
+    let(:params) { ['C:\\myapp'] }
+    it { is_expected.to eq 'C:\\myapp' }
+  end # /context with an absolute Windows path
+
+  context 'with an absolute UNC path' do
+    let(:params) { ['//myapp'] }
+    it { is_expected.to eq '//myapp' }
+  end # /context with an absolute UNC path
 end
