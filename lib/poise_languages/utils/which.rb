@@ -33,7 +33,7 @@ module PoiseLanguages
       # @return [String, false]
       def which(cmd, extra_path: %w{/bin /usr/bin /sbin /usr/sbin}, path: nil)
         # If it was already absolute, just return that.
-        return cmd if cmd =~ /^(\/|(\w:)\\)/
+        return cmd if cmd =~ /^(\/|([a-z]:)\\)/i
         # Allow passing something other than the real env var.
         path ||= ENV['PATH']
         # Based on Chef::Mixin::Which#which
