@@ -36,8 +36,8 @@ module PoiseLanguages
       else
         Shellwords.split(cmd)
       end
-      # Don't try to touch anything if the first value looks like a flag.
-      if cmd.first && !cmd.first.start_with?('-')
+      # Don't try to touch anything if the first value looks like a flag or a path.
+      if cmd.first && !cmd.first.start_with?('-') && !cmd.first.include?(::File::SEPARATOR)
         # If which returns false, just leave it I guess.
         cmd[0] = which(cmd.first, path: path) || cmd.first
       end

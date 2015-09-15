@@ -46,6 +46,11 @@ describe PoiseLanguages::Utils do
       let(:which) { false }
       it { is_expected.to eq 'myapp --port 8080' }
     end # /context with an unknown command
+
+    context 'with a relative path' do
+      let(:cmd) { "#{File.join('.', 'myapp')} --port 8080" }
+      it { is_expected.to eq "#{File.join('.', 'myapp')} --port 8080" }
+    end # /context with a relative path
   end # /describe #absolute_command
 
   describe '#which' do
