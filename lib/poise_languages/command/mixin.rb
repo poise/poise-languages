@@ -17,8 +17,9 @@
 require 'shellwords'
 
 require 'chef/mixin/shell_out'
-require 'chef/mixin/which'
 require 'poise'
+
+require 'poise_languages/utils'
 
 
 module PoiseLanguages
@@ -39,7 +40,6 @@ module PoiseLanguages
       #   end
       module Resource
         include Poise::Resource
-        include Chef::Mixin::Which
         poise_subresource(true)
 
         private
@@ -94,7 +94,7 @@ module PoiseLanguages
           if parent
             parent.send(:"#{name}_binary")
           else
-            which(default_binary || name.to_s)
+            PoiseLanguages::Utils.which(default_binary || name.to_s)
           end
         end
 
