@@ -24,6 +24,11 @@ describe PoiseLanguages::Command::Mixin do
   end
   provider(:mylang_runtime)
   let(:runtime) { chef_run.mylang_runtime('parent') }
+  before do
+    allow(PoiseLanguages::Utils).to receive(:which) do |name|
+      "/which/#{name}"
+    end
+  end
 
   describe PoiseLanguages::Command::Mixin::Resource do
     resource(:poise_test) do
@@ -32,9 +37,6 @@ describe PoiseLanguages::Command::Mixin do
         include klass
         language_command_mixin(:mylang)
       }
-      def which(name)
-        "/which/#{name}"
-      end
     end
     provider(:poise_test)
 
@@ -227,9 +229,6 @@ describe PoiseLanguages::Command::Mixin do
       attribute(:command)
       attribute(:expect)
       attribute(:options, default: [])
-      def which(name)
-        "/which/#{name}"
-      end
     end
 
     describe '#$name_shell_out' do
