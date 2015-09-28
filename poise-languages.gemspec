@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.version = PoiseLanguages::VERSION
   spec.authors = ['Noah Kantrowitz']
   spec.email = %w{noah@coderanger.net}
-  spec.description = "A Chef cookbook to help writing language cooobkoks."
+  spec.description = "A Chef cookbook to help writing language cookbooks."
   spec.summary = spec.description
   spec.homepage = 'https://github.com/poise/poise-languages'
   spec.license = 'Apache 2.0'
