@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.1
+
+* [#1](https://github.com/poise/poise-languages/pull/1) – Fix typo in gemspec.
+
 ## v1.1.0
 
 * Add helpers for installing from static archives.
