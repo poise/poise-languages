@@ -1,7 +1,8 @@
 # Changelog
 
-## v1.1.1
+## v1.2.0
 
+* Support for install development headers with SCL providers.
 * [#1](https://github.com/poise/poise-languages/pull/1) – Fix typo in gemspec.
 
 ## v1.1.0
