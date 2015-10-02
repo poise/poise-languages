@@ -24,6 +24,25 @@ module PoiseLanguages
     include Which
     extend self
 
+    # Default whitelist for {#shelljoin}.
+    SHELLJOIN_WHITELIST = [/^2?[><]/]
+
+    # An improved version of Shellwords.shelljoin that doesn't escape a few
+    # things.
+    #
+    # @param cmd [Array<String>] Command array to join.
+    # @param whitelist [Array<Regexp>] Array of patterns to whitelist.
+    # @return [String]
+    def shelljoin(cmd, whitelist: SHELLJOIN_WHITELIST)
+      cmd.map do |str|
+        if whitelist.any? {|pat| str =~ pat }
+          str
+        else
+          Shellwords.shellescape(str)
+        end
+      end.join(' ')
+    end
+
     # Convert the executable in a string or array command to an absolute path.
     #
     # @param cmd [String, Array<String>] Command to fix up.
@@ -41,7 +60,7 @@ module PoiseLanguages
         # If which returns false, just leave it I guess.
         cmd[0] = which(cmd.first, path: path) || cmd.first
       end
-      cmd = Shellwords.join(cmd) unless was_array
+      cmd = shelljoin(cmd) unless was_array
       cmd
     end
 

@@ -17,6 +17,45 @@
 require 'spec_helper'
 
 describe PoiseLanguages::Utils do
+  describe '#shelljoin' do
+    let(:cmd) { [] }
+    subject { described_class.shelljoin(cmd) }
+
+    context 'with an empty array' do
+      it { is_expected.to eq '' }
+    end # /context with an empty array
+
+    context 'with simple arguments' do
+      let(:cmd) { %w{a b c} }
+      it { is_expected.to eq 'a b c' }
+    end # /context with simple arguments
+
+    context 'with complex arguments' do
+      let(:cmd) { ['a', 'b c', '--d=e'] }
+      it { is_expected.to eq 'a b\\ c --d\\=e' }
+    end # /context with complex arguments
+
+    context 'with input redirect' do
+      let(:cmd) { %w{a b < c} }
+      it { is_expected.to eq 'a b < c' }
+    end # /context with input redirect
+
+    context 'with input redirect and no space' do
+      let(:cmd) { %w{a b <c} }
+      it { is_expected.to eq 'a b <c' }
+    end # /context with input redirect
+
+    context 'with output redirect' do
+      let(:cmd) { %w{a b > c} }
+      it { is_expected.to eq 'a b > c' }
+    end # /context with output redirect
+
+    context 'with error redirect' do
+      let(:cmd) { %w{a b 2> c} }
+      it { is_expected.to eq 'a b 2> c' }
+    end # /context with error redirect
+  end # /describe #shelljoin
+
   describe '#absolute_command' do
     let(:path) { double('path') }
     let(:cmd) { }
