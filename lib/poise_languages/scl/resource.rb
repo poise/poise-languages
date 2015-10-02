@@ -33,16 +33,18 @@ module PoiseLanguages
     class Resource < Chef::Resource
       include Poise
       provides(:poise_languages_scl)
-      actions(:install, :uninstall)
+      actions(:install, :upgrade, :uninstall)
 
       # @!attribute package_name
       #   Name of the SCL package for the language.
       #   @return [String]
       attribute(:package_name, kind_of: String, name_attribute: true)
+      attribute(:dev_package, kind_of: [String, NilClass])
       # @!attribute url
       #   URL to the SCL repository package for the language.
       #   @return [String]
       attribute(:url, kind_of: String, required: true)
+      attribute(:version, kind_of: [String, NilClass])
       # @!attribute parent
       #   Resource for the language runtime. Used only for messages.
       #   @return [Chef::Resource]
@@ -66,7 +68,22 @@ module PoiseLanguages
         notifying_block do
           install_scl_utils
           install_scl_repo_package
-          install_scl_package
+          flush_yum_cache
+          install_scl_package(:install)
+          install_scl_devel_package(:install) if new_resource.dev_package
+        end
+      end
+
+      # The `upgrade` action for the `poise_languages_scl` resource.
+      #
+      # @return [void]
+      def action_upgrade
+        notifying_block do
+          install_scl_utils
+          install_scl_repo_package
+          flush_yum_cache
+          install_scl_package(:upgrade)
+          install_scl_devel_package(:upgrade) if new_resource.dev_package
         end
       end
 
@@ -77,7 +94,9 @@ module PoiseLanguages
         notifying_block do
           uninstall_scl_utils
           uninstall_scl_repo_package
+          uninstall_scl_devel_package if new_resource.dev_package
           uninstall_scl_package
+          flush_yum_cache
         end
       end
 
@@ -95,9 +114,25 @@ module PoiseLanguages
         end
       end
 
-      def install_scl_package
+      def flush_yum_cache
+        ruby_block 'flush_yum_cache' do
+          block do
+            # Equivalent to flush_cache after: true
+            Chef::Provider::Package::Yum::YumCache.instance.reload
+          end
+        end
+      end
+
+      def install_scl_package(action)
         yum_package new_resource.package_name do
-          flush_cache before: true
+          action action
+          version new_resource.version
+        end
+      end
+
+      def install_scl_devel_package(action)
+        yum_package new_resource.dev_package do
+          action action
         end
       end
 
@@ -114,9 +149,11 @@ module PoiseLanguages
       end
 
       def uninstall_scl_package
-        install_scl_package.tap do |r|
-          r.action(:remove)
-        end
+        install_scl_package(:remove)
+      end
+
+      def uninstall_scl_devel_package
+        install_scl_devel_package(:remove)
       end
 
     end

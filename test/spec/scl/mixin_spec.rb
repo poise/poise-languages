@@ -29,6 +29,9 @@ describe PoiseLanguages::Scl::Mixin do
       def scl_package
         {name: 'python34', url: 'http://something.rpm'}
       end
+      def options
+        {dev_package: true}
+      end
       def action_run
         install_scl_package
       end
@@ -46,6 +49,9 @@ describe PoiseLanguages::Scl::Mixin do
       include described_class
       def scl_package
         {name: 'python34', url: 'http://something.rpm'}
+      end
+      def options
+        {dev_package: true}
       end
       def action_run
         uninstall_scl_package
@@ -181,6 +187,17 @@ EOH
     end # /context with an scl_source line
   end # /describe #parse_enable_file
 
+  describe '.default_inversion_options' do
+    provider(:poise_test) do
+      include Poise(inversion: :poise_test)
+      include described_class
+    end
+    let(:node) { double('node') }
+    let(:new_resource) { double('resource') }
+    subject { provider(:poise_test).default_inversion_options(node, new_resource) }
+    it { is_expected.to eq({dev_package: true, package_name: nil, package_version: nil, package_upgrade: false}) }
+  end # /describe .default_inversion_options
+
   describe '.provides_auto?' do
     let(:node) { double('node', :"[]" => {'machine' => 'x86_64'}) }
     let(:new_resource) { double('resource') }
@@ -196,13 +213,13 @@ EOH
     let(:version) { '' }
     provider(:poise_test) do
       include described_class
-      scl_package('3.4.2', 'rh-python34', {
+      scl_package('3.4.2', 'rh-python34', 'rh-python34-python-devel', {
         ['redhat', 'centos'] => {
           '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
           '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-6-x86_64/download/rhscl-rh-python34-epel-6-x86_64.noarch.rpm',
         },
       })
-      scl_package('3.3.2', 'python33', {
+      scl_package('3.3.2', 'python33', 'python33-python-devel', {
         ['redhat', 'centos'] => {
           '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-7-x86_64/download/rhscl-python33-epel-7-x86_64.noarch.rpm',
           '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-6-x86_64/download/rhscl-python33-epel-6-x86_64.noarch.rpm',
@@ -221,6 +238,7 @@ EOH
         is_expected.to include({
           version: '3.4.2',
           name: 'rh-python34',
+          devel_name: 'rh-python34-python-devel',
           url: 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
         })
       end
@@ -233,6 +251,7 @@ EOH
         is_expected.to include({
           version: '3.3.2',
           name: 'python33',
+          devel_name: 'python33-python-devel',
           url: 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-6-x86_64/download/rhscl-python33-epel-6-x86_64.noarch.rpm',
         })
       end
@@ -242,5 +261,26 @@ EOH
       let(:chefspec_options) { {platform: 'ubuntu', version: '12.04'} }
       it { is_expected.to be_nil }
     end # /context on Ubuntu
+
+    context 'with no devel package' do
+      provider(:poise_test) do
+        include described_class
+        scl_package('3.4.2', 'rh-python34', {
+          ['redhat', 'centos'] => {
+            '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
+            '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-6-x86_64/download/rhscl-rh-python34-epel-6-x86_64.noarch.rpm',
+          },
+        })
+      end
+      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      it do
+        is_expected.to include({
+          version: '3.4.2',
+          name: 'rh-python34',
+          devel_name: nil,
+          url: 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
+        })
+      end
+    end # /context with no devel package
   end # /describe .find_scl_package
 end

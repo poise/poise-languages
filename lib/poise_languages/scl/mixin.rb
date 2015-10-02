@@ -24,9 +24,12 @@ module PoiseLanguages
 
       def install_scl_package
         pkg = scl_package
-        poise_languages_scl pkg[:name] do
+        poise_languages_scl options[:package_name] || pkg[:name] do
+          action :upgrade if options[:package_upgrade]
+          dev_package options[:dev_package] == true ? pkg[:devel_name] : options[:dev_package]
           parent new_resource
           url pkg[:url]
+          version options[:package_version]
         end
       end
 
@@ -83,6 +86,23 @@ module PoiseLanguages
           !!find_scl_package(node, version)
         end
 
+        # Set some default inversion provider options. Package name can't get
+        # a default value here because that would complicate the handling of
+        # {system_package_candidates}.
+        #
+        # @api private
+        def default_inversion_options(node, resource)
+          super.merge({
+            # Install dev headers?
+            dev_package: true,
+            # Manual overrides for package name and/or version.
+            package_name: nil,
+            package_version: nil,
+            # Set to true to use action :upgrade on system packages.
+            package_upgrade: false,
+          })
+        end
+
         def find_scl_package(node, version)
           pkg = scl_packages.find {|p| p[:version].start_with?(version) }
           return unless pkg
@@ -97,8 +117,8 @@ module PoiseLanguages
           @scl_packages ||= []
         end
 
-        def scl_package(version, name, urls)
-          scl_packages << {version: version, name: name, urls: urls}
+        def scl_package(version, name, devel_name=nil, urls)
+          scl_packages << {version: version, name: name, devel_name: devel_name, urls: urls}
         end
 
         def included(klass)

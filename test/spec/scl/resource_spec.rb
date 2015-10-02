@@ -18,12 +18,20 @@ require 'spec_helper'
 
 describe PoiseLanguages::Scl::Resource do
   step_into(:poise_languages_scl)
+  step_into(:ruby_block)
   let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+  let(:yum_cache) { double('yum_cache', reload: nil) }
+  before do
+    allow(Chef::Provider::Package::Yum::YumCache).to receive(:instance).and_return(yum_cache)
+  end
 
   context 'action :install' do
     recipe do
-      r = ruby_block 'parent'
+      r = ruby_block 'parent' do
+        block { }
+      end
       poise_languages_scl 'mylang' do
+        dev_package 'mylang-devel'
         parent r
         url 'http://mylang.rpm'
       end
@@ -31,14 +39,39 @@ describe PoiseLanguages::Scl::Resource do
 
     it { is_expected.to upgrade_package('scl-utils') }
     it { is_expected.to install_rpm_package('rhscl-mylang').with(source: 'http://mylang.rpm') }
-    it { is_expected.to install_yum_package('mylang').with(flush_cache: {before: true}) }
+    it { is_expected.to install_yum_package('mylang') }
+    it { is_expected.to install_yum_package('mylang-devel') }
+    it { expect(yum_cache).to receive(:reload); run_chef }
   end # /context action :install
+
+  context 'action :upgrade' do
+    recipe do
+      r = ruby_block 'parent' do
+        block { }
+      end
+      poise_languages_scl 'mylang' do
+        action :upgrade
+        dev_package 'mylang-devel'
+        parent r
+        url 'http://mylang.rpm'
+      end
+    end
+
+    it { is_expected.to upgrade_package('scl-utils') }
+    it { is_expected.to install_rpm_package('rhscl-mylang').with(source: 'http://mylang.rpm') }
+    it { is_expected.to upgrade_yum_package('mylang') }
+    it { is_expected.to upgrade_yum_package('mylang-devel') }
+    it { expect(yum_cache).to receive(:reload); run_chef }
+  end # /context action :upgrade
 
   context 'action :uninstall' do
     recipe do
-      r = ruby_block 'parent'
+      r = ruby_block 'parent' do
+        block { }
+      end
       poise_languages_scl 'mylang' do
         action :uninstall
+        dev_package 'mylang-devel'
         parent r
         url 'http://mylang.rpm'
       end
@@ -47,5 +80,7 @@ describe PoiseLanguages::Scl::Resource do
     it { is_expected.to remove_package('scl-utils') }
     it { is_expected.to remove_rpm_package('rhscl-mylang') }
     it { is_expected.to remove_yum_package('mylang') }
+    it { is_expected.to remove_yum_package('mylang-devel') }
+    it { expect(yum_cache).to receive(:reload); run_chef }
   end # /context action :uninstall
 end
