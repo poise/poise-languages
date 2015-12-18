@@ -52,6 +52,7 @@ module PoiseLanguages
           version: options['static_version'],
           kernel: node['kernel']['name'].downcase,
           machine: node['kernel']['machine'],
+          machine_label: self.class.static_machine_label(node),
         }
       end
 
