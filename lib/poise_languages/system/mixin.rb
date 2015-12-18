@@ -69,9 +69,9 @@ module PoiseLanguages
       # @return [String]
       def system_package_name
         # Look up all packages for this language on this platform.
-        system_packages = node.value_for_platform(self.class.packages)
+        system_packages = self.class.packages && node.value_for_platform(self.class.packages)
         if !system_packages && self.class.default_package
-          Chef::Log.debug("[#{new_resource}] No known packages for #{node['platform']} #{node['platform_version']}, defaulting to '#{self.class.default_package}'.")
+          Chef::Log.debug("[#{new_resource}] No known packages for #{node['platform']} #{node['platform_version']}, defaulting to '#{self.class.default_package}'.") if self.class.packages
           system_packages = Array(self.class.default_package)
         end
 
