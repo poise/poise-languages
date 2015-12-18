@@ -188,7 +188,7 @@ module PoiseLanguages
           define_method(:load_current_resource) do
             super().tap do |_|
               each_package do |package_name, new_version, current_version, candidate_version|
-                unless candidate_version.start_with?(version)
+                unless candidate_version && candidate_version.start_with?(version)
                   raise PoiseLanguages::Error.new("Package #{package_name} would install #{candidate_version}, which does not match #{version.empty? ? version.inspect : version}. Please set the package_name or package_version provider options.")
                 end
               end
