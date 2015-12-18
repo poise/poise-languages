@@ -97,7 +97,7 @@ module PoiseLanguages
         end
 
         def static_version(node, resource)
-          raw_version = resource.version.gsub(/^#{static_name}(-|$)/, '')
+          raw_version = resource.version.to_s.gsub(/^#{static_name}(-|$)/, '')
           if static_versions.include?(raw_version)
             raw_version
           else
