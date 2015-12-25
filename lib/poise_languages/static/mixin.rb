@@ -62,6 +62,7 @@ module PoiseLanguages
         attr_accessor :static_machines
         attr_accessor :static_url
         attr_accessor :static_strip_components
+        attr_accessor :static_retries
 
         def provides_auto?(node, resource)
           # Check that the version starts with our project name and the machine
@@ -78,6 +79,8 @@ module PoiseLanguages
           super.merge({
             # Path to install the package. Defaults to /opt/name-version.
             path: nil,
+            # Number of times to retry failed downloads.
+            retries: static_retries,
             # Full version number for use in interpolation.
             static_version: static_version(node, resource),
             # Value to pass to tar --strip-components.
@@ -87,13 +90,14 @@ module PoiseLanguages
           })
         end
 
-        def static_options(name: nil, versions: [], machines: %w{linux-i686 linux-x86_64}, url: nil, strip_components: 1)
+        def static_options(name: nil, versions: [], machines: %w{linux-i686 linux-x86_64}, url: nil, strip_components: 1, retries: 5)
           raise PoiseLanguages::Error.new("Static archive URL is required, on #{self}") unless url
           self.static_name = name || provides.to_s
           self.static_versions = versions
           self.static_machines = Set.new(machines)
           self.static_url = url
           self.static_strip_components = strip_components
+          self.static_retries = retries
         end
 
         def static_version(node, resource)

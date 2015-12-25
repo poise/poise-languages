@@ -39,6 +39,10 @@ module PoiseLanguages
       #   Directory to install to.
       #   @return [String]
       attribute(:path, kind_of: String, name_attribute: true)
+      # @!attribute download_retries
+      #   Number of times to retry failed downloads. Defaults to 5.
+      #   @return [Integer]
+      attribute(:download_retries, kind_of: Integer, default: 5)
       # @!attribute source
       #   URL to download from.
       #   @return [String]
@@ -112,6 +116,7 @@ module PoiseLanguages
           group 0
           mode '644'
           notifies :run, unpack_resource, :immediately
+          retries new_resource.download_retries
         end
       end
 
