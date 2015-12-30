@@ -259,7 +259,7 @@ describe PoiseLanguages::Command::Mixin do
         recipe do
           poise_test 'test' do
             command 'foo'
-            expect ['/which/mylang foo', {timeout: 900}]
+            expect ['/which/mylang foo', {environment:{}, timeout: 900}]
           end
         end
         it { run_chef }
@@ -293,7 +293,7 @@ describe PoiseLanguages::Command::Mixin do
         recipe do
           poise_test 'test' do
             command ['foo']
-            expect [['/which/mylang', 'foo'], {timeout: 900}]
+            expect [['/which/mylang', 'foo'], {environment: {}, timeout: 900}]
           end
         end
         it { run_chef }
