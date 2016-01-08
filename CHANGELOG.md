@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.0
+
+* `%{machine_label}` is available in URL template for static download.
+* Automatically retry `remote_file` downloads to handle transient HTTP failures.
+* All `*_shell_out` language command helpers use `poise_shell_out` to set `$HOME`
+  and other environment variables by default.
+
 ## v1.2.0
 
 * Support for installing development headers with SCL providers.
