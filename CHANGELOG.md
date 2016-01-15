@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.1
+
+* Fix system package installs on OS X.
+
 ## v1.3.0
 
 * `%{machine_label}` is available in URL template for static download.
