@@ -133,7 +133,7 @@ module PoiseLanguages
         end
 
         Chef::Log.debug("[#{new_resource.parent}] Building package resource using #{packages.inspect}.")
-        @package_resource ||= if node.platform_family?('rhel', 'fedora', 'amazon')
+        @package_resource ||= if node.platform_family?('rhel', 'fedora', 'amazon', 'mac_os_x')
           # @todo Can't use multi-package mode with yum pending https://github.com/chef/chef/issues/3476.
           packages.map do |name, version|
             Chef::Resource::Package.new(name, run_context).tap do |r|
