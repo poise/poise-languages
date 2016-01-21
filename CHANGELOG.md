@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.2
+
+* Handle static archive unpacking correctly when a single download is shared
+  between two paths.
+
 ## v1.3.1
 
 * Fix system package installs on OS X.
