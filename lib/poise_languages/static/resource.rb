@@ -73,8 +73,8 @@ module PoiseLanguages
       def action_install
         notifying_block do
           install_utils unless node.platform_family?('mac_os_x', 'windows')
-          create_directory
           download_archive
+          create_directory
           # Unpack is handled as a notification from download_archive.
         end
       end
@@ -101,10 +101,12 @@ module PoiseLanguages
       end
 
       def create_directory
+        unpack_resource = unpack_archive
         directory new_resource.path do
           user 0
           group 0
           mode '755'
+          notifies :run, unpack_resource, :immediately
         end
       end
 
@@ -115,7 +117,7 @@ module PoiseLanguages
           owner 0
           group 0
           mode '644'
-          notifies :run, unpack_resource, :immediately
+          notifies :run, unpack_resource, :immediately if ::File.exist?(new_resource.path)
           retries new_resource.download_retries
         end
       end
