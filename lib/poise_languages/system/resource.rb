@@ -165,8 +165,9 @@ module PoiseLanguages
           # Grab the provider.
           provider = resource.provider_for_action(action)
           provider.action = action
-          # Check the candidate version if needed
-          patch_load_current_resource!(provider, new_resource.version)
+          # Check the candidate version if needed. With a manual package_version
+          # you get whatever you asked for.
+          patch_load_current_resource!(provider, new_resource.version) unless new_resource.package_version
           # Run our action.
           Chef::Log.debug("[#{new_resource.parent}] Running #{provider} with #{action}")
           provider.run_action(action)
