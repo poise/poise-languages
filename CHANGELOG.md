@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.3
+
+* [#3](https://github.com/poise/poise-languages/pull/3) Fix `static` binary
+  installation on AIX and Solaris.
+* Only run the candidate version check for `system` installs when we aren't
+  passing in package_version.
+
 ## v1.3.2
 
 * Handle static archive unpacking correctly when a single download is shared
@@ -21,7 +28,7 @@
 * Support for installing development headers with SCL providers.
 * Add `PoiseLanguages::Utils.shelljoin` for encoding command arrays with some
   bash metadata characters allowed.
-* [#1](https://github.com/poise/poise-languages/pull/1) – Fix typo in gemspec.
+* [#1](https://github.com/poise/poise-languages/pull/1) Fix typo in gemspec.
 
 ## v1.1.0
 
