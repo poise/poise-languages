@@ -72,7 +72,7 @@ module PoiseLanguages
       # @return [void]
       def action_install
         notifying_block do
-          install_utils unless node.platform_family?('mac_os_x', 'windows')
+          install_utils unless node.platform_family?('mac_os_x', 'windows', 'aix', 'solaris2')
           download_archive
           create_directory
           # Unpack is handled as a notification from download_archive.
@@ -138,7 +138,7 @@ module PoiseLanguages
         end
         cmd << new_resource.cache_path
 
-        execute 'unpack archive' do
+        @unpack_archive ||= execute 'unpack archive' do
           # Run via notification from #download_archive.
           action :nothing
           command cmd
