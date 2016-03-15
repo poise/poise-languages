@@ -72,7 +72,7 @@ module PoiseLanguages
       # @return [void]
       def action_install
         notifying_block do
-          install_utils unless node.platform_family?('mac_os_x', 'windows')
+          install_utils unless node.platform_family?('mac_os_x', 'windows', 'aix', 'solaris2')
           download_archive
           create_directory
           # Unpack is handled as a notification from download_archive.
