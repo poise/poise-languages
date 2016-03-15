@@ -138,7 +138,7 @@ module PoiseLanguages
         end
         cmd << new_resource.cache_path
 
-        execute 'unpack archive' do
+        @unpack_archive ||= execute 'unpack archive' do
           # Run via notification from #download_archive.
           action :nothing
           command cmd
