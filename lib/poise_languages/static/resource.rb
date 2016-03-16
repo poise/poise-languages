@@ -98,7 +98,7 @@ module PoiseLanguages
       def install_utils
         package [].tap {|utils|
           # If we're using a custom tar, we shouldn't try to install it.
-          utils << node.value_for_platform_family(defaut: 'tar', solaris2: 'gnu-tar') if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/ && new_resource.tar_path.nil?
+          utils << node.value_for_platform_family(default: 'tar', solaris2: 'gnu-tar') if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/ && new_resource.tar_path.nil?
           unless node.platform_family?('solaris2')
             utils << 'bzip2' if new_resource.cache_path =~ /\.t?bz/
             # This probably won't work on RHEL?
