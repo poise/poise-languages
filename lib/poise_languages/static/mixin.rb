@@ -30,7 +30,7 @@ module PoiseLanguages
         poise_languages_static static_folder do
           source url
           strip_components options['strip_components']
-          tar options['tar_path']
+          tar_path options['tar_path']
         end
       end
 
@@ -125,7 +125,7 @@ module PoiseLanguages
         def static_machine_label_wrapper(node, resource)
           args = [node]
           arity = method(:static_machine_label).arity
-          args << new_resource if arity > 1 || arity < 0
+          args << resource if arity > 1 || arity < 0
           static_machine_label(*args)
         end
 
