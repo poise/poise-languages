@@ -51,10 +51,10 @@ module PoiseLanguages
       #   Value to pass to tar --strip-components.
       #   @return [String, Integer, nil]
       attribute(:strip_components, kind_of: [String, Integer, NilClass], default: 1)
-      # @!attribute tar
-      #   Full path of tar executables, in case its in a non-standard location.
-      #   @raturn [String]
-      attribute(:tar, kind_of: String, default: 'tar')
+      # @!attribute tar_path
+      #   Full path to the tar binary. Defaults to `/
+      #   @return [String, nil]
+      attribute(:tar_path, kind_of: [String, NilClass])
 
       def cache_path
         @cache_path ||= ::File.join(Chef::Config[:file_cache_path], source.split(/\//).last)
@@ -76,7 +76,7 @@ module PoiseLanguages
       # @return [void]
       def action_install
         notifying_block do
-          install_utils unless node.platform_family?('mac_os_x', 'windows', 'aix', 'solaris2')
+          install_utils unless node.platform_family?('mac_os_x', 'windows', 'aix')
           download_archive
           create_directory
           # Unpack is handled as a notification from download_archive.
@@ -98,10 +98,12 @@ module PoiseLanguages
       def install_utils
         package [].tap {|utils|
           # If we're using a custom tar, we shouldn't try to install it.
-          utils << new_resource.tar if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/ && new_resource.tar == 'tar'
-          utils << 'bzip2' if new_resource.cache_path =~ /\.t?bz/
-          # This probably won't work on RHEL?
-          utils << 'xz-utils' if new_resource.cache_path =~ /\.t?xz/
+          utils << node.value_for_platform_family(defaut: 'tar', solaris2: 'gnu-tar') if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/ && new_resource.tar_path.nil?
+          unless node.platform_family?('solaris2')
+            utils << 'bzip2' if new_resource.cache_path =~ /\.t?bz/
+            # This probably won't work on RHEL?
+            utils << 'xz-utils' if new_resource.cache_path =~ /\.t?xz/
+          end
         }
       end
 
@@ -130,7 +132,7 @@ module PoiseLanguages
       def unpack_archive
         # Build up the unpack command. Someday this will probably need to
         # support unzip too.
-        cmd = [new_resource.tar]
+        cmd = [new_resource.tar_path || node.value_for_platform_family(default: 'tar', solaris2: '/usr/gnu/bin/tar')]
         cmd << "--strip-components=#{new_resource.strip_components}" if new_resource.strip_components && new_resource.strip_components > 0
         cmd << if new_resource.cache_path =~ /\.t?gz/
           '-xzvf'
