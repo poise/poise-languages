@@ -130,7 +130,7 @@ module PoiseLanguages
         # Build up the unpack command. Someday this will probably need to
         # support unzip too.
         cmd = new_resource.tar
-        cmd << "--strip-components=#{new_resource.strip_components}" if new_resource.strip_components && new_resource.strip_components > 0 && !new_resource.is_gnu_tar
+        cmd << "--strip-components=#{new_resource.strip_components}" if new_resource.strip_components && new_resource.strip_components > 0
         cmd << if new_resource.cache_path =~ /\.t?gz/
           '-xzvf'
         elsif new_resource.cache_path =~ /\.t?bz/
