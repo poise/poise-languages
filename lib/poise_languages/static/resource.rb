@@ -51,6 +51,10 @@ module PoiseLanguages
       #   Value to pass to tar --strip-components.
       #   @return [String, Integer, nil]
       attribute(:strip_components, kind_of: [String, Integer, NilClass], default: 1)
+      # @!attribute tar
+      #   Full path of tar executables, in case its in a non-standard location.
+      #   @raturn [String]
+      attribute(:tar, kind_of: String, default: 'tar')
 
       def cache_path
         @cache_path ||= ::File.join(Chef::Config[:file_cache_path], source.split(/\//).last)
@@ -93,7 +97,8 @@ module PoiseLanguages
 
       def install_utils
         package [].tap {|utils|
-          utils << 'tar' if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/
+          # If we're using a custom tar, we shouldn't try to install it.
+          utils << new_resource.tar if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/ && new_resource.tar == 'tar'
           utils << 'bzip2' if new_resource.cache_path =~ /\.t?bz/
           # This probably won't work on RHEL?
           utils << 'xz-utils' if new_resource.cache_path =~ /\.t?xz/
@@ -125,7 +130,7 @@ module PoiseLanguages
       def unpack_archive
         # Build up the unpack command. Someday this will probably need to
         # support unzip too.
-        cmd = %w{tar}
+        cmd = [new_resource.tar]
         cmd << "--strip-components=#{new_resource.strip_components}" if new_resource.strip_components && new_resource.strip_components > 0
         cmd << if new_resource.cache_path =~ /\.t?gz/
           '-xzvf'
