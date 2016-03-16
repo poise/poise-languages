@@ -53,7 +53,7 @@ module PoiseLanguages
           version: options['static_version'],
           kernel: node['kernel']['name'].downcase,
           machine: node['kernel']['machine'],
-          machine_label: self.class.static_machine_label(node),
+          machine_label: self.class.static_machine_label(node, new_resource),
         }
       end
 
@@ -68,7 +68,7 @@ module PoiseLanguages
         def provides_auto?(node, resource)
           # Check that the version starts with our project name and the machine
           # we are on is supported.
-          resource.version.to_s =~ /^#{static_name}(-|$)/ && static_machines.include?(static_machine_label(node))
+          resource.version.to_s =~ /^#{static_name}(-|$)/ && static_machines.include?(static_machine_label(node, resource))
         end
 
         # Set some default inversion provider options. Package name can't get
@@ -114,7 +114,7 @@ module PoiseLanguages
           end
         end
 
-        def static_machine_label(node)
+        def static_machine_label(node, _resource)
           "#{node['kernel']['name'].downcase}-#{node['kernel']['machine']}"
         end
 
