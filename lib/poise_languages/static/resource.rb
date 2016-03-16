@@ -129,7 +129,7 @@ module PoiseLanguages
       def unpack_archive
         # Build up the unpack command. Someday this will probably need to
         # support unzip too.
-        cmd = new_resource.tar
+        cmd = [new_resource.tar]
         cmd << "--strip-components=#{new_resource.strip_components}" if new_resource.strip_components && new_resource.strip_components > 0
         cmd << if new_resource.cache_path =~ /\.t?gz/
           '-xzvf'

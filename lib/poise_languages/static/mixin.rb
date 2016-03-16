@@ -30,6 +30,7 @@ module PoiseLanguages
         poise_languages_static static_folder do
           source url
           strip_components options['strip_components']
+          tar options['tar']
         end
       end
 
@@ -87,6 +88,8 @@ module PoiseLanguages
             strip_components: static_strip_components,
             # URL template to download from.
             url: static_url,
+            # Location of the tar executable, if it's in a non-standard location
+            tar: 'tar'
           })
         end
 
