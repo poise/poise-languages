@@ -97,7 +97,8 @@ module PoiseLanguages
 
       def install_utils
         package [].tap {|utils|
-          utils << new_resource.tar if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/
+          # If we're using a custom tar, we shouldn't try to install it.
+          utils << new_resource.tar if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/ && new_resource.tar == 'tar'
           utils << 'bzip2' if new_resource.cache_path =~ /\.t?bz/
           # This probably won't work on RHEL?
           utils << 'xz-utils' if new_resource.cache_path =~ /\.t?xz/
