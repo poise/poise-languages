@@ -16,3 +16,4 @@
 
 require 'poise_boiler/spec_helper'
 require 'poise_languages'
+require 'poise_archive/cheftie'

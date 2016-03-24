@@ -76,7 +76,6 @@ module PoiseLanguages
       # @return [void]
       def action_install
         notifying_block do
-          install_utils unless node.platform_family?('mac_os_x', 'windows', 'aix')
           download_archive
           create_directory
           # Unpack is handled as a notification from download_archive.
@@ -94,18 +93,6 @@ module PoiseLanguages
       end
 
       private
-
-      def install_utils
-        package [].tap {|utils|
-          # If we're using a custom tar, we shouldn't try to install it.
-          utils << node.value_for_platform_family(default: 'tar', solaris2: 'gnu-tar') if new_resource.cache_path =~ /\.t(ar|gz|bz|xz)/ && new_resource.tar_path.nil?
-          unless node.platform_family?('solaris2')
-            utils << 'bzip2' if new_resource.cache_path =~ /\.t?bz/
-            # This probably won't work on RHEL?
-            utils << 'xz-utils' if new_resource.cache_path =~ /\.t?xz/
-          end
-        }
-      end
 
       def create_directory
         unpack_resource = unpack_archive
@@ -130,26 +117,11 @@ module PoiseLanguages
       end
 
       def unpack_archive
-        # Build up the unpack command. Someday this will probably need to
-        # support unzip too.
-        cmd = [new_resource.tar_path || node.value_for_platform_family(default: 'tar', solaris2: '/usr/gnu/bin/tar')]
-        cmd << "--strip-components=#{new_resource.strip_components}" if new_resource.strip_components && new_resource.strip_components > 0
-        cmd << if new_resource.cache_path =~ /\.t?gz/
-          '-xzvf'
-        elsif new_resource.cache_path =~ /\.t?bz/
-          '-xjvf'
-        elsif new_resource.cache_path =~ /\.t?xz/
-          '-xJvf'
-        else
-          '-xvf'
-        end
-        cmd << new_resource.cache_path
-
-        @unpack_archive ||= execute 'unpack archive' do
-          # Run via notification from #download_archive.
+        @unpack_archive ||= poise_archive new_resource.cache_path do
+          # Run via notification from #download_archive and #create_directory.
           action :nothing
-          command cmd
-          cwd new_resource.path
+          destination new_resource.path
+          strip_components new_resource.strip_components
         end
       end
 
