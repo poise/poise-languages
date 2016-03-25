@@ -100,7 +100,7 @@ module PoiseLanguages
           user 0
           group 0
           mode '755'
-          notifies :run, unpack_resource, :immediately
+          notifies :unpack, unpack_resource, :immediately
         end
       end
 
@@ -111,7 +111,7 @@ module PoiseLanguages
           owner 0
           group 0
           mode '644'
-          notifies :run, unpack_resource, :immediately if ::File.exist?(new_resource.path)
+          notifies :unpack, unpack_resource, :immediately if ::File.exist?(new_resource.path)
           retries new_resource.download_retries
         end
       end
