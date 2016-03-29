@@ -51,10 +51,6 @@ module PoiseLanguages
       #   Value to pass to tar --strip-components.
       #   @return [String, Integer, nil]
       attribute(:strip_components, kind_of: [String, Integer, NilClass], default: 1)
-      # @!attribute tar_path
-      #   Full path to the tar binary. Defaults to `/
-      #   @return [String, nil]
-      attribute(:tar_path, kind_of: [String, NilClass])
 
       def cache_path
         @cache_path ||= ::File.join(Chef::Config[:file_cache_path], source.split(/\//).last)
