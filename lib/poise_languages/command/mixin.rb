@@ -18,6 +18,7 @@ require 'shellwords'
 
 require 'poise'
 
+require 'poise_languages/error'
 require 'poise_languages/utils'
 
 
@@ -179,12 +180,17 @@ module PoiseLanguages
           end
           # Inject other options.
           options[:timeout] ||= new_resource.timeout
+          # Find the actual binary to use. Raise an exception if we see false
+          # which happens if no parent resource is found, no explicit default
+          # binary was given, and which() fails to find a thing.
+          binary = new_resource.send(name)
+          raise Error.new("Unable to find a #{name} binary for command: #{command_args.is_a?(Array) ? Shellwords.shelljoin(command_args) : command_args}") unless binary
           command = if command_args.length == 1 && command_args.first.is_a?(String)
             # String mode, sigh.
-            "#{Shellwords.escape(new_resource.send(name))} #{command_args.first}"
+            "#{Shellwords.escape(binary)} #{command_args.first}"
           else
             # Array mode. Handle both ('one', 'two') and (['one', 'two']).
-            [new_resource.send(name)] + command_args.flatten
+            [binary] + command_args.flatten
           end
           Chef::Log.debug("[#{new_resource}] Running #{name} command: #{command.is_a?(Array) ? Shellwords.shelljoin(command) : command}")
           # Run the command
