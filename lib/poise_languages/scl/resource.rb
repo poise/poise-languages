@@ -130,14 +130,14 @@ module PoiseLanguages
       end
 
       def install_scl_package(action)
-        yum_package new_resource.package_name do
+        package new_resource.package_name do
           action action
           version new_resource.version
         end
       end
 
       def install_scl_devel_package(action)
-        yum_package new_resource.dev_package do
+        package new_resource.dev_package do
           action action
           version new_resource.version
         end

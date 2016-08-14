@@ -33,14 +33,12 @@ describe PoiseLanguages::Scl::Resource do
       poise_languages_scl 'mylang' do
         dev_package 'mylang-devel'
         parent r
-        url 'http://mylang.rpm'
       end
     end
 
-    it { is_expected.to upgrade_package('scl-utils') }
-    it { is_expected.to install_rpm_package('rhscl-mylang').with(source: 'http://mylang.rpm') }
-    it { is_expected.to install_yum_package('mylang') }
-    it { is_expected.to install_yum_package('mylang-devel') }
+    it { is_expected.to upgrade_package('centos-release-scl-rh') }
+    it { is_expected.to install_package('mylang') }
+    it { is_expected.to install_package('mylang-devel') }
     it { expect(yum_cache).to receive(:reload); run_chef }
   end # /context action :install
 
@@ -53,14 +51,12 @@ describe PoiseLanguages::Scl::Resource do
         action :upgrade
         dev_package 'mylang-devel'
         parent r
-        url 'http://mylang.rpm'
       end
     end
 
-    it { is_expected.to upgrade_package('scl-utils') }
-    it { is_expected.to install_rpm_package('rhscl-mylang').with(source: 'http://mylang.rpm') }
-    it { is_expected.to upgrade_yum_package('mylang') }
-    it { is_expected.to upgrade_yum_package('mylang-devel') }
+    it { is_expected.to upgrade_package('centos-release-scl-rh') }
+    it { is_expected.to upgrade_package('mylang') }
+    it { is_expected.to upgrade_package('mylang-devel') }
     it { expect(yum_cache).to receive(:reload); run_chef }
   end # /context action :upgrade
 
@@ -73,14 +69,10 @@ describe PoiseLanguages::Scl::Resource do
         action :uninstall
         dev_package 'mylang-devel'
         parent r
-        url 'http://mylang.rpm'
       end
     end
 
-    it { is_expected.to remove_package('scl-utils') }
-    it { is_expected.to remove_rpm_package('rhscl-mylang') }
-    it { is_expected.to remove_yum_package('mylang') }
-    it { is_expected.to remove_yum_package('mylang-devel') }
-    it { expect(yum_cache).to receive(:reload); run_chef }
+    it { is_expected.to remove_package('mylang') }
+    it { is_expected.to remove_package('mylang-devel') }
   end # /context action :uninstall
 end

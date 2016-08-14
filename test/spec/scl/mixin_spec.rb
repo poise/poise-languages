@@ -27,7 +27,7 @@ describe PoiseLanguages::Scl::Mixin do
       include Poise
       include described_class
       def scl_package
-        {name: 'python34', url: 'http://something.rpm'}
+        {name: 'python34', platform_version: ::Gem::Requirement.create('> 0')}
       end
       def options
         {dev_package: true}
@@ -40,7 +40,7 @@ describe PoiseLanguages::Scl::Mixin do
       poise_test 'test'
     end
 
-    it { is_expected.to install_poise_languages_scl('python34').with(parent: chef_run.poise_test('test'), url: 'http://something.rpm') }
+    it { is_expected.to install_poise_languages_scl('python34').with(parent: chef_run.poise_test('test')) }
   end # /describe #install_scl_package
 
   describe '#uninstall_scl_package' do
@@ -48,7 +48,7 @@ describe PoiseLanguages::Scl::Mixin do
       include Poise
       include described_class
       def scl_package
-        {name: 'python34', url: 'http://something.rpm'}
+        {name: 'python34', platform_version: ::Gem::Requirement.create('> 0')}
       end
       def options
         {dev_package: true}
@@ -61,7 +61,7 @@ describe PoiseLanguages::Scl::Mixin do
       poise_test 'test'
     end
 
-    it { is_expected.to uninstall_poise_languages_scl('python34').with(parent: chef_run.poise_test('test'), url: 'http://something.rpm') }
+    it { is_expected.to uninstall_poise_languages_scl('python34').with(parent: chef_run.poise_test('test')) }
   end # /describe #uninstall_scl_package
 
   describe '#scl_package' do
@@ -203,6 +203,7 @@ EOH
     let(:new_resource) { double('resource') }
     subject { provider(:poise_test).provides_auto?(node, new_resource) }
     before do
+      allow(node).to receive(:platform_family?) {|name| name == 'rhel' }
       allow(provider(:poise_test)).to receive(:inversion_options).with(node, new_resource).and_return({})
       allow(provider(:poise_test)).to receive(:find_scl_package).with(node, nil).and_return({})
     end
@@ -213,22 +214,8 @@ EOH
     let(:version) { '' }
     provider(:poise_test) do
       include described_class
-      scl_package('3.4.2', 'rh-python34', 'rh-python34-python-devel', {
-        ['redhat', 'centos'] => {
-          '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
-          '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-6-x86_64/download/rhscl-rh-python34-epel-6-x86_64.noarch.rpm',
-        },
-      })
-      scl_package('3.3.2', 'python33', 'python33-python-devel', {
-        ['redhat', 'centos'] => {
-          '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-7-x86_64/download/rhscl-python33-epel-7-x86_64.noarch.rpm',
-          '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-6-x86_64/download/rhscl-python33-epel-6-x86_64.noarch.rpm',
-        },
-        'fedora' => {
-          '~> 21.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/fedora-21-x86_64/download/rhscl-python33-fedora-21-x86_64.noarch.rpm',
-          '~> 20.0' => 'https://www.softwarecollections.org/en/scls/rhscl/python33/fedora-20-x86_64/download/rhscl-python33-fedora-20-x86_64.noarch.rpm',
-        },
-      })
+      scl_package('3.4.2', 'rh-python34', 'rh-python34-python-devel', '>= 7.0')
+      scl_package('3.3.2', 'python33', 'python33-python-devel')
     end
     subject { provider(:poise_test).send(:find_scl_package, chef_run.node, version) }
 
@@ -239,10 +226,32 @@ EOH
           version: '3.4.2',
           name: 'rh-python34',
           devel_name: 'rh-python34-python-devel',
-          url: 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
         })
       end
     end # /context on CentOS 7 with no version
+
+    context 'on CentOS 7 with a version' do
+      let(:version) { '3.3' }
+      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      it do
+        is_expected.to include({
+          version: '3.3.2',
+          name: 'python33',
+          devel_name: 'python33-python-devel',
+        })
+      end
+    end # /context on CentOS 7 with a version
+
+    context 'on CentOS 6 with no version' do
+      let(:chefspec_options) { {platform: 'centos', version: '6.0'} }
+      it do
+        is_expected.to include({
+          version: '3.3.2',
+          name: 'python33',
+          devel_name: 'python33-python-devel',
+        })
+      end
+    end # /context on CentOS 6 with no version
 
     context 'on CentOS 6 with a version' do
       let(:version) { '3.3' }
@@ -252,25 +261,14 @@ EOH
           version: '3.3.2',
           name: 'python33',
           devel_name: 'python33-python-devel',
-          url: 'https://www.softwarecollections.org/en/scls/rhscl/python33/epel-6-x86_64/download/rhscl-python33-epel-6-x86_64.noarch.rpm',
         })
       end
     end # /context on CentOS 6 with a version
 
-    context 'on Ubuntu' do
-      let(:chefspec_options) { {platform: 'ubuntu', version: '12.04'} }
-      it { is_expected.to be_nil }
-    end # /context on Ubuntu
-
     context 'with no devel package' do
       provider(:poise_test) do
         include described_class
-        scl_package('3.4.2', 'rh-python34', {
-          ['redhat', 'centos'] => {
-            '~> 7.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
-            '~> 6.0' => 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-6-x86_64/download/rhscl-rh-python34-epel-6-x86_64.noarch.rpm',
-          },
-        })
+        scl_package('3.4.2', 'rh-python34')
       end
       let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
       it do
@@ -278,7 +276,6 @@ EOH
           version: '3.4.2',
           name: 'rh-python34',
           devel_name: nil,
-          url: 'https://www.softwarecollections.org/en/scls/rhscl/rh-python34/epel-7-x86_64/download/rhscl-rh-python34-epel-7-x86_64.noarch.rpm',
         })
       end
     end # /context with no devel package
