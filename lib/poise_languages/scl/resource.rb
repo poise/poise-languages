@@ -39,11 +39,14 @@ module PoiseLanguages
       #   Name of the SCL package for the language.
       #   @return [String]
       attribute(:package_name, kind_of: String, name_attribute: true)
+      # @!attribute dev_package
+      #   Name of the -devel package with headers and whatnot.
+      #   @return [String, nil]
       attribute(:dev_package, kind_of: [String, NilClass])
-      # @!attribute url
-      #   URL to the SCL repository package for the language.
-      #   @return [String]
-      attribute(:url, kind_of: String, required: true)
+      # @!attribute version
+      #   Version of the SCL package(s) to install. If unset, follows the same
+      #   semantics as the core `package` resource.
+      #   @return [String, nil]
       attribute(:version, kind_of: [String, NilClass])
       # @!attribute parent
       #   Resource for the language runtime. Used only for messages.
@@ -66,8 +69,7 @@ module PoiseLanguages
       # @return [void]
       def action_install
         notifying_block do
-          install_scl_utils
-          install_scl_repo_package
+          install_scl_repo
           flush_yum_cache
           install_scl_package(:install)
           install_scl_devel_package(:install) if new_resource.dev_package
@@ -79,8 +81,7 @@ module PoiseLanguages
       # @return [void]
       def action_upgrade
         notifying_block do
-          install_scl_utils
-          install_scl_repo_package
+          install_scl_repo
           flush_yum_cache
           install_scl_package(:upgrade)
           install_scl_devel_package(:upgrade) if new_resource.dev_package
@@ -92,25 +93,30 @@ module PoiseLanguages
       # @return [void]
       def action_uninstall
         notifying_block do
-          uninstall_scl_utils
-          uninstall_scl_repo_package
           uninstall_scl_devel_package if new_resource.dev_package
           uninstall_scl_package
-          flush_yum_cache
         end
       end
 
       private
 
-      def install_scl_utils
-        package 'scl-utils' do
-          action :upgrade # This shouldn't be a problem. Famous last words.
-        end
-      end
-
-      def install_scl_repo_package
-        rpm_package 'rhscl-' + new_resource.package_name do
-          source new_resource.url
+      def install_scl_repo
+        if node.platform?('redhat')
+          # Set up the real RHSCL subscription.
+          # NOTE: THIS IS NOT TESTED BECAUSE REDHAT DOESN'T OFFER ANY WAY TO DO
+          # AUTOMATED TESTING. IF YOU USE REDHAT AND THIS BREAKS, PLEASE LET ME
+          # KNOW BY FILING A GITHUB ISSUE AT http://github.com/poise/poise-languages/issues/new.
+          repo_name = "rhel-variant-rhscl-#{node['platform_version'][0]}-rpms"
+          execute "subscription-manager repos --enable #{repo_name}" do
+            not_if { shell_out!('subscription-manager repos --list').stdout.include?(repo_name) }
+          end
+        else
+          package 'centos-release-scl-rh' do
+            # Using upgrade here because changes very very rare and always
+            # important when they happen. If this breaks your prod infra, I'm
+            # sorry :-(
+            action :upgrade
+          end
         end
       end
 
@@ -133,18 +139,7 @@ module PoiseLanguages
       def install_scl_devel_package(action)
         yum_package new_resource.dev_package do
           action action
-        end
-      end
-
-      def uninstall_scl_utils
-        install_scl_utils.tap do |r|
-          r.action(:remove)
-        end
-      end
-
-      def uninstall_scl_repo_package
-        install_scl_repo_package.tap do |r|
-          r.action(:remove)
+          version new_resource.version
         end
       end
 

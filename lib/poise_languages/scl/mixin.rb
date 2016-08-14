@@ -28,7 +28,6 @@ module PoiseLanguages
           action :upgrade if options[:package_upgrade]
           dev_package options[:dev_package] == true ? pkg[:devel_name] : options[:dev_package]
           parent new_resource
-          url pkg[:url]
           version options[:package_version]
         end
       end
@@ -80,8 +79,8 @@ module PoiseLanguages
 
       module ClassMethods
         def provides_auto?(node, resource)
-          # They don't build 32-bit versions for these.
-          return false unless node['kernel']['machine'] == 'x86_64'
+          # They don't build 32-bit versions for these and only for RHEL/CentOS.
+          return false unless node['kernel']['machine'] == 'x86_64' && node.platform_family?('rhel')
           version = inversion_options(node, resource)['version']
           !!find_scl_package(node, version)
         end
@@ -104,11 +103,11 @@ module PoiseLanguages
         end
 
         def find_scl_package(node, version)
-          pkg = scl_packages.find {|p| p[:version].start_with?(version) }
-          return unless pkg
-          pkg[:url] = node.value_for_platform(pkg[:urls])
-          return unless pkg[:url]
-          pkg
+          platform_version = ::Gem::Version.create(node['platform_version'])
+          # Filter out anything that doesn't match this EL version.
+          candidate_packages = scl_packages.select {|p| p[:platform_version].satisfied_by?(platform_version) }
+          # Find something with a prefix match on the Python version.
+          candidate_packages.find {|p| p[:version].start_with?(version) }
         end
 
         private
@@ -117,8 +116,8 @@ module PoiseLanguages
           @scl_packages ||= []
         end
 
-        def scl_package(version, name, devel_name=nil, urls)
-          scl_packages << {version: version, name: name, devel_name: devel_name, urls: urls}
+        def scl_package(version, name, devel_name=nil, platform_version='>= 6.0')
+          scl_packages << {version: version, name: name, devel_name: devel_name, platform_version: ::Gem::Requirement.create(platform_version)}
         end
 
         def included(klass)
