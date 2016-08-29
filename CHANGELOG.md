@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.0
+
+* Backwards-incompatible change to SCL management to comply with their new repo
+  packages and layout. Uses `centos-release-scl-rh` repo package or the
+  `rhel-variant-rhscl` RedHat subscription.
+
 ## v1.4.0
 
 * Use `poise-archive` to unpack static binary archives. This should work better
