@@ -140,6 +140,7 @@ module PoiseLanguages
               r.version(version)
               r.action(action)
               r.declared_type = :package
+              r.retries(5)
             end
           end
         else
@@ -147,6 +148,7 @@ module PoiseLanguages
             r.version(packages.values)
             r.action(action)
             r.declared_type = :package
+            r.retries(5)
           end]
         end
       end
