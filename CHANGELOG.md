@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.1
+
+* Don't error on `Chef::Decorator::Lazy` proxy objects for `candidate_version`.
+* Retry system and SCL package installs because transient network failures.
+
 ## v2.0.0
 
 * Backwards-incompatible change to SCL management to comply with their new repo
