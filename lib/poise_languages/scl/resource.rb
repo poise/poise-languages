@@ -116,6 +116,7 @@ module PoiseLanguages
             # important when they happen. If this breaks your prod infra, I'm
             # sorry :-(
             action :upgrade
+            retries 5
           end
         end
       end
@@ -132,6 +133,7 @@ module PoiseLanguages
       def install_scl_package(action)
         package new_resource.package_name do
           action action
+          retries 5
           version new_resource.version
         end
       end
@@ -139,6 +141,7 @@ module PoiseLanguages
       def install_scl_devel_package(action)
         package new_resource.dev_package do
           action action
+          retries 5
           version new_resource.version
         end
       end
