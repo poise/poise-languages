@@ -203,7 +203,7 @@ EOH
     let(:new_resource) { double('resource') }
     subject { provider(:poise_test).provides_auto?(node, new_resource) }
     before do
-      allow(node).to receive(:platform_family?) {|name| name == 'rhel' }
+      allow(node).to receive(:platform?) {|*names| names.include?('redhat') || names.include?('centos') }
       allow(provider(:poise_test)).to receive(:inversion_options).with(node, new_resource).and_return({})
       allow(provider(:poise_test)).to receive(:find_scl_package).with(node, nil).and_return({})
     end
