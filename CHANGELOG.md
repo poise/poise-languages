@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.2
+
+* Don't try to use SCL providers on Amazon Linux.
+
 ## v2.0.1
 
 * Don't error on `Chef::Decorator::Lazy` proxy objects for `candidate_version`.

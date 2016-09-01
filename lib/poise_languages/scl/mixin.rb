@@ -80,7 +80,8 @@ module PoiseLanguages
       module ClassMethods
         def provides_auto?(node, resource)
           # They don't build 32-bit versions for these and only for RHEL/CentOS.
-          return false unless node['kernel']['machine'] == 'x86_64' && node.platform_family?('rhel')
+          # TODO: What do I do about Fedora and/or Amazon?
+          return false unless node['kernel']['machine'] == 'x86_64' && node.platform?('redhat', 'centos')
           version = inversion_options(node, resource)['version']
           !!find_scl_package(node, version)
         end
