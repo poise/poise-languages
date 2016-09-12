@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.3
+
+* Correct the subscription repository name used for SCLs on RedHat.
+
 ## v2.0.2
 
 * Don't try to use SCL providers on Amazon Linux.
