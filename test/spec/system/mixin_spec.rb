@@ -23,6 +23,7 @@ describe PoiseLanguages::System::Mixin do
   end
 
   describe '#install_system_packages' do
+    let(:chefspec_options) { {platform: 'ubuntu', version: '16.04'} }
     provider(:poise_test) do
       include Poise
       include described_class
@@ -41,7 +42,7 @@ describe PoiseLanguages::System::Mixin do
     end
 
     it { is_expected.to install_poise_languages_system('mylang').with(parent: chef_run.poise_test('test'),
-                                                                      dev_package: nil,
+                                                                      dev_package: 'mylang-dev',
                                                                       dev_package_overrides: {},
                                                                       package_version: nil,
                                                                       version: '') }
