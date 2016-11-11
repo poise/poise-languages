@@ -36,7 +36,8 @@ describe PoiseLanguages::System::Resource do
       current_resource
     end
     def install_package(name, version)
-      run_context.resource_collection << new_resource unless run_context.resource_collection.keys.include?(new_resource.to_s)
+      rc = defined?(Chef.run_context) ? Chef.run_context : self.run_context
+      rc.resource_collection << new_resource unless rc.resource_collection.keys.include?(new_resource.to_s)
     end
     alias_method :upgrade_package, :install_package
     alias_method :remove_package, :install_package
