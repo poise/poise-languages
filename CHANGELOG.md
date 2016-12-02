@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.4
+
+* Fixes to work with the latest Chef.
+
 ## v2.0.3
 
 * Correct the subscription repository name used for SCLs on RedHat.
