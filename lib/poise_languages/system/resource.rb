@@ -196,7 +196,13 @@ module PoiseLanguages
                 # so we need the nil? check to see if the object being proxied is
                 # nil (i.e. there is no version).
                 unless candidate_version && (!candidate_version.nil?) && (!candidate_version.empty?) && candidate_version.start_with?(version)
-                  raise PoiseLanguages::Error.new("Package #{package_name} would install #{candidate_version}, which does not match #{version.empty? ? version.inspect : version}. Please set the package_name or package_version provider options.")
+                  # Don't display a wonky error message if there is no candidate.
+                  candidate_label = if candidate_version && (!candidate_version.nil?) && (!candidate_version.empty?)
+                    candidate_version
+                  else
+                    candidate_version.inspect
+                  end
+                  raise PoiseLanguages::Error.new("Package #{package_name} would install #{candidate_label}, which does not match #{version.empty? ? version.inspect : version}. Please set the package_name or package_version provider options.")
                 end
               end
             end
