@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.0.5
+
+* Fixes to work with the latest Chef (again).
+
 ## v2.0.4
 
 * Fixes to work with the latest Chef.
