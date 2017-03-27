@@ -27,7 +27,7 @@ module PoiseLanguages
       #
       # @api public
       # @return [PoiseLanguages::System::Resource]
-      def install_system_packages
+      def install_system_packages(&block)
         dev_package_overrides = system_dev_package_overrides
         poise_languages_system system_package_name do
           # Otherwise use the default install action.
@@ -38,6 +38,7 @@ module PoiseLanguages
           dev_package_overrides dev_package_overrides
           package_version options['package_version'] if options['package_version']
           version options['version']
+          instance_exec(&block) if block
         end
       end
 
@@ -45,9 +46,10 @@ module PoiseLanguages
       #
       # @api public
       # @return [PoiseLanguages::System::Resource]
-      def uninstall_system_packages
+      def uninstall_system_packages(&block)
         install_system_packages.tap do |r|
           r.action(:uninstall)
+          r.instance_exec(&block) if block
         end
       end
 
