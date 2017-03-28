@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.0
+
+* Allow customizing properties on the system package install resource via a block
+
 ## v2.0.5
 
 * Fixes to work with the latest Chef (again).
