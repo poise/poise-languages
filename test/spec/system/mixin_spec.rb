@@ -46,6 +46,30 @@ describe PoiseLanguages::System::Mixin do
                                                                       dev_package_overrides: {},
                                                                       package_version: nil,
                                                                       version: '') }
+
+    context 'with a block override' do
+      provider(:poise_test) do
+        include Poise
+        include described_class
+        def system_package_name
+          'mylang'
+        end
+        def options
+          {}
+        end
+        def action_run
+          install_system_packages do
+            dev_package false
+          end
+        end
+      end
+
+      it { is_expected.to install_poise_languages_system('mylang').with(parent: chef_run.poise_test('test'),
+                                                                        dev_package: false,
+                                                                        dev_package_overrides: {},
+                                                                        package_version: nil,
+                                                                        version: '') }
+    end # /context with a block override
   end # /describe #install_system_packages
 
   describe '#uninstall_system_packages' do
@@ -67,6 +91,26 @@ describe PoiseLanguages::System::Mixin do
     end
 
     it { is_expected.to uninstall_poise_languages_system('mylang') }
+
+    context 'with a block override' do
+      provider(:poise_test) do
+        include Poise
+        include described_class
+        def system_package_name
+          'mylang'
+        end
+        def options
+          {}
+        end
+        def action_run
+          uninstall_system_packages do
+            dev_package false
+          end
+        end
+      end
+
+      it { is_expected.to uninstall_poise_languages_system('mylang').with(dev_package: false) }
+    end # /context with a block override
   end # /describe #uninstall_system_packages
 
   describe '#system_package_candidates' do
