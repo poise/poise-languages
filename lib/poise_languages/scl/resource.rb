@@ -108,7 +108,7 @@ module PoiseLanguages
           # KNOW BY FILING A GITHUB ISSUE AT http://github.com/poise/poise-languages/issues/new.
           repo_name = "rhel-server-rhscl-#{node['platform_version'][0]}-rpms"
           execute "subscription-manager repos --enable #{repo_name}" do
-            not_if { shell_out!('subscription-manager repos --list').stdout.include?(repo_name) }
+            not_if { shell_out!('subscription-manager repos --list-enabled').stdout.include?(repo_name) }
           end
         else
           package 'centos-release-scl-rh' do
