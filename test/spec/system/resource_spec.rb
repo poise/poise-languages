@@ -59,14 +59,14 @@ describe PoiseLanguages::System::Resource do
   end
 
   context 'on Ubuntu' do
-    it { is_expected.to install_apt_package('mylang, mylang-dev') }
+    it { is_expected.to install_package('mylang, mylang-dev') }
   end # /context on Ubuntu
 
   context 'on CentOS' do
     let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
 
-    it { is_expected.to install_yum_package('mylang') }
-    it { is_expected.to install_yum_package('mylang-devel') }
+    it { is_expected.to install_package('mylang') }
+    it { is_expected.to install_package('mylang-devel') }
   end # /context on Ubuntu
 
   context 'action :upgrade' do
@@ -79,7 +79,7 @@ describe PoiseLanguages::System::Resource do
       end
     end
 
-    it { is_expected.to upgrade_apt_package('mylang, mylang-dev') }
+    it { is_expected.to upgrade_package('mylang, mylang-dev') }
   end # /context action :upgrade
 
   context 'action :uninstall' do
@@ -95,7 +95,7 @@ describe PoiseLanguages::System::Resource do
       default_attributes[:poise_current] = '2.0'
     end
 
-    it { is_expected.to purge_apt_package('mylang, mylang-dev') }
+    it { is_expected.to purge_package('mylang, mylang-dev') }
   end # /context action :uninstall
 
   context 'with a matching version' do
@@ -107,7 +107,7 @@ describe PoiseLanguages::System::Resource do
       end
     end
 
-    it { is_expected.to install_apt_package('mylang, mylang-dev') }
+    it { is_expected.to install_package('mylang, mylang-dev') }
   end # /context with a matching version
 
   context 'with a non-matching version' do
