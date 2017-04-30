@@ -15,110 +15,274 @@
 #
 
 require 'spec_helper'
+require 'chef/version'
+require 'shellwords'
 
 describe PoiseLanguages::System::Resource do
-  let(:chefspec_options) { {platform: 'ubuntu', version: '14.04'} }
   step_into(:poise_languages_system)
-  step_into(:package, unwrap_notifying_block: false)
-  provider(:package_hack, parent: Chef::Provider::Package) do
-    def load_current_resource
-      @current_resource = new_resource.class.new(new_resource.name, run_context)
-      current_resource.package_name(new_resource.package_name)
-      candidate = node['poise_candidate']
-      current = node['poise_current']
-      @candidate_version = if new_resource.package_name.is_a?(Array)
-        current_resource.version([current] * new_resource.package_name.length)
-        [candidate] * new_resource.package_name.length
-      else
-        current_resource.version(current)
-        candidate
-      end
-      current_resource
-    end
-    def install_package(name, version)
-      rc = defined?(Chef.run_context) ? Chef.run_context : self.run_context
-      rc.resource_collection << new_resource unless rc.resource_collection.keys.include?(new_resource.to_s)
-    end
-    alias_method :upgrade_package, :install_package
-    alias_method :remove_package, :install_package
-    alias_method :purge_package, :install_package
-  end
-  recipe do
-    r = ruby_block 'parent'
-    poise_languages_system 'mylang' do
-      parent r
-      version ''
-    end
-  end
   before do
-    # I can't use the provider resolver system easily because overrides like this
-    # don't work well with the Halite patcher.
-    allow_any_instance_of(Chef::Resource::Package).to receive(:provider).and_return(provider(:package_hack))
-    # Set our candidate version.
-    default_attributes[:poise_candidate] = '1.0'
+    # Don't actually run any installs. The package hack prevents the usual
+    # ChefSpec stubbing from working. This fakes it.
+    [Chef::Provider::Package::Apt, Chef::Provider::Package::Yum].each do |klass|
+      allow_any_instance_of(klass).to receive(:install_package) {|this| this.new_resource.perform_action(:install, converge_time: true) }
+      allow_any_instance_of(klass).to receive(:upgrade_package) {|this| this.new_resource.perform_action(:upgrade, converge_time: true) }
+      allow_any_instance_of(klass).to receive(:remove_package) {|this| this.new_resource.perform_action(:remove, converge_time: true) }
+      allow_any_instance_of(klass).to receive(:purge_package) {|this| this.new_resource.perform_action(:purge, converge_time: true) }
+    end
   end
 
   context 'on Ubuntu' do
-    it { is_expected.to install_package('mylang, mylang-dev') }
+    let(:chefspec_options) { {platform: 'ubuntu', version: '16.04'} }
+    before do
+      # Stubs load load_current_resource for apt_package.
+#       allow_any_instance_of(Chef::Provider::Package::Apt).to receive(:shell_out).with('apt-cache', 'policy', 'mylang', any_args).and_return(double(stdout: <<-EOH, error!: nil))
+# mylang:
+#   Installed: (none)
+#   Candidate: 1.2.3-1
+#   Version table:
+#      1.2.3-1 500
+#         500 http://archive.ubuntu.com/ubuntu xenial/main amd64 Packages
+# EOH
+#       allow_any_instance_of(Chef::Provider::Package::Apt).to receive(:shell_out).with('apt-cache', 'policy', 'mylang-dev', any_args).and_return(double(stdout: <<-EOH, error!: nil))
+# mylang-dev:
+#   Installed: (none)
+#   Candidate: 1.2.3-1
+#   Version table:
+#      1.2.3-1 500
+#         500 http://archive.ubuntu.com/ubuntu xenial/main amd64 Packages
+# EOH
+      allow_any_instance_of(Chef::Provider::Package::Apt).to receive(:shell_out) do |this, *args|
+        args.pop if args.last.is_a?(Hash)
+        args = Shellwords.split(args.first) if args.size == 1 && args.first.is_a?(String)
+        if args[0..1] == %w{apt-cache policy}
+          double(stdout: <<-EOH, error!: nil)
+#{args[2]}:
+  Installed: (none)
+  Candidate: 1.2.3-1
+  Version table:
+     1.2.3-1 500
+        500 http://archive.ubuntu.com/ubuntu xenial/main amd64 Packages
+EOH
+        else
+          raise "unstubbed command #{args.inspect}"
+        end
+      end
+    end
+
+    context 'action :install' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version ''
+        end
+      end
+
+      if Gem::Requirement.create('>= 12.11').satisfied_by?(Gem::Version.create(Chef::VERSION))
+        it { is_expected.to install_package('mylang, mylang-dev') }
+      else
+        it { is_expected.to install_package('mylang') }
+        it { is_expected.to install_package('mylang-dev') }
+      end
+    end # /context action :upgrade
+
+    context 'action :upgrade' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          action :upgrade
+          parent r
+          version ''
+        end
+      end
+
+      if Gem::Requirement.create('>= 12.11').satisfied_by?(Gem::Version.create(Chef::VERSION))
+        it { is_expected.to upgrade_package('mylang, mylang-dev') }
+      else
+        it { is_expected.to upgrade_package('mylang') }
+        it { is_expected.to upgrade_package('mylang-dev') }
+      end
+    end # /context action :upgrade
+
+    context 'action :uninstall' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          action :uninstall
+          parent r
+          version ''
+        end
+      end
+
+      if Gem::Requirement.create('>= 12.11').satisfied_by?(Gem::Version.create(Chef::VERSION))
+        it { is_expected.to purge_package('mylang, mylang-dev') }
+      else
+        it { is_expected.to purge_package('mylang') }
+        it { is_expected.to purge_package('mylang-dev') }
+      end
+    end # /context action :uninstall
+
+    context 'with a matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '1'
+        end
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end # /context with a matching version
+
+    context 'with an exact matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '1.2.3'
+        end
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end # /context with an exact matching version
+
+    context 'with a non-matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '2'
+        end
+      end
+
+      it { expect { subject }.to raise_error PoiseLanguages::Error }
+    end # /context with a non-matching version
+
+    context 'with a nearby non-matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '1.2.4'
+        end
+      end
+
+      it { expect { subject }.to raise_error PoiseLanguages::Error }
+    end # /context with a nearby non-matching version
   end # /context on Ubuntu
 
   context 'on CentOS' do
     let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
-
-    it { is_expected.to install_package('mylang') }
-    it { is_expected.to install_package('mylang-devel') }
-  end # /context on Ubuntu
-
-  context 'action :upgrade' do
-    recipe do
-      r = ruby_block 'parent'
-      poise_languages_system 'mylang' do
-        action :upgrade
-        parent r
-        version ''
-      end
-    end
-
-    it { is_expected.to upgrade_package('mylang, mylang-dev') }
-  end # /context action :upgrade
-
-  context 'action :uninstall' do
-    recipe do
-      r = ruby_block 'parent'
-      poise_languages_system 'mylang' do
-        action :uninstall
-        parent r
-        version ''
-      end
-    end
     before do
-      default_attributes[:poise_current] = '2.0'
+      yum_cache = double('YumCache')
+      allow(yum_cache).to receive(:yum_binary=)
+      allow(yum_cache).to receive(:disable_extra_repo_control)
+      allow(yum_cache).to receive(:package_available?).and_return(false)
+      allow(yum_cache).to receive(:package_available?).with(/^mylang(-devel)?$/).and_return(true)
+      allow(yum_cache).to receive(:installed_version).with(/^mylang(-devel)?$/, nil).and_return(nil)
+      allow(yum_cache).to receive(:candidate_version).with(/^mylang(-devel)?$/, nil).and_return('1.2.3')
+      allow(Chef::Provider::Package::Yum::YumCache).to receive(:instance).and_return(yum_cache)
     end
 
-    it { is_expected.to purge_package('mylang, mylang-dev') }
-  end # /context action :uninstall
-
-  context 'with a matching version' do
-    recipe do
-      r = ruby_block 'parent'
-      poise_languages_system 'mylang' do
-        parent r
-        version '1'
+    context 'action :install' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version ''
+        end
       end
-    end
 
-    it { is_expected.to install_package('mylang, mylang-dev') }
-  end # /context with a matching version
-
-  context 'with a non-matching version' do
-    recipe do
-      r = ruby_block 'parent'
-      poise_languages_system 'mylang' do
-        parent r
-        version '2'
+      if Gem::Requirement.create('>= 12.19').satisfied_by?(Gem::Version.create(Chef::VERSION))
+        it { is_expected.to install_package('mylang, mylang-devel') }
+      else
+        it { is_expected.to install_package('mylang') }
+        it { is_expected.to install_package('mylang-devel') }
       end
-    end
+    end # /context action :upgrade
 
-    it { expect { subject }.to raise_error PoiseLanguages::Error }
-  end # /context with a non-matching version
+    context 'action :upgrade' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          action :upgrade
+          parent r
+          version ''
+        end
+      end
+
+      if Gem::Requirement.create('>= 12.19').satisfied_by?(Gem::Version.create(Chef::VERSION))
+        it { is_expected.to upgrade_package('mylang, mylang-devel') }
+      else
+        it { is_expected.to upgrade_package('mylang') }
+        it { is_expected.to upgrade_package('mylang-devel') }
+      end
+    end # /context action :upgrade
+
+    context 'action :uninstall' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          action :uninstall
+          parent r
+          version ''
+        end
+      end
+
+      if Gem::Requirement.create('>= 12.19').satisfied_by?(Gem::Version.create(Chef::VERSION))
+        it { is_expected.to remove_package('mylang, mylang-devel') }
+      else
+        it { is_expected.to remove_package('mylang') }
+        it { is_expected.to remove_package('mylang-devel') }
+      end
+    end # /context action :uninstall
+
+    context 'with a matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '1'
+        end
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end # /context with a matching version
+
+    context 'with an exact matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '1.2.3'
+        end
+      end
+
+      it { expect { subject }.to_not raise_error }
+    end # /context with an exact matching version
+
+    context 'with a non-matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '2'
+        end
+      end
+
+      it { expect { subject }.to raise_error PoiseLanguages::Error }
+    end # /context with a non-matching version
+
+    context 'with a nearby non-matching version' do
+      recipe do
+        r = ruby_block 'parent'
+        poise_languages_system 'mylang' do
+          parent r
+          version '1.2.4'
+        end
+      end
+
+      it { expect { subject }.to raise_error PoiseLanguages::Error }
+    end # /context with a nearby non-matching version
+  end # /context on CentOS
 end

@@ -97,60 +97,86 @@ module PoiseLanguages
       #
       # @return [void]
       def action_install
-        run_package_action(:install)
+        notifying_block do
+          install_packages
+          run_action_hack
+        end
       end
 
       # The `upgrade` action for the `poise_languages_system` resource.
       #
       # @return [void]
       def action_upgrade
-        run_package_action(:upgrade)
+        notifying_block do
+          upgrade_packages
+          run_action_hack
+        end
       end
 
       # The `uninstall` action for the `poise_languages_system` resource.
       #
       # @return [void]
       def action_uninstall
-        action = node.platform_family?('debian') ? :purge : :remove
-        package_resources(action).each do |resource|
-          resource.run_action(action)
-          new_resource.updated_by_last_action(true) if resource.updated_by_last_action?
+        notifying_block do
+          uninstall_packages
         end
       end
 
       private
 
-      # Create package resource objects for all needed packages. These are created
-      # directly and not added to the resource collection.
+      # Install the needed language packages.
       #
-      # @return [Array<Chef::Resource::Package>]
-      def package_resources(action)
+      # @api private
+      # @return [Array<Chef::Resource>]
+      def install_packages
         packages = {new_resource.package_name => new_resource.package_version}
         # If we are supposed to install the dev package, grab it using the same
         # version as the main package.
         if new_resource.dev_package
           packages[new_resource.dev_package] = new_resource.package_version
         end
-
         Chef::Log.debug("[#{new_resource.parent}] Building package resource using #{packages.inspect}.")
+
+        # Check for multi-package support.
         package_resource_class = Chef::Resource.resource_for_node(:package, node)
-        @package_resource ||= if node.platform_family?('rhel', 'fedora', 'amazon', 'mac_os_x')
-          # @todo Can't use multi-package mode with yum pending https://github.com/chef/chef/issues/3476.
-          packages.map do |name, version|
-            package_resource_class.new(name, run_context).tap do |r|
-              r.version(version)
-              r.action(action)
-              r.declared_type = :package
-              r.retries(5)
-            end
+        package_provider_class = package_resource_class.new('multipackage_check', run_context).provider_for_action(:install)
+        package_resources = if package_provider_class.respond_to?(:use_multipackage_api?) && package_provider_class.use_multipackage_api?
+          package packages.keys do
+            version packages.values
           end
         else
-          [package_resource_class.new(packages.keys, run_context).tap do |r|
-            r.version(packages.values)
-            r.action(action)
-            r.declared_type = :package
-            r.retries(5)
-          end]
+          # Fallback for non-multipackage.
+          packages.map do |pkg_name, pkg_version|
+            package pkg_name do
+              version pkg_version
+            end
+          end
+        end
+
+        # Apply some settings to all of the resources.
+        Array(package_resources).each do |res|
+          res.retries(5)
+          res.define_singleton_method(:apply_action_hack?) { true }
+        end
+      end
+
+      # Upgrade the needed language packages.
+      #
+      # @api private
+      # @return [Array<Chef::Resource>]
+      def upgrade_packages
+        install_packages.each do |res|
+          res.action(:upgrade)
+        end
+      end
+
+      # Uninstall the needed language packages.
+      #
+      # @api private
+      # @return [Array<Chef::Resource>]
+      def uninstall_packages
+        install_packages.each do |res|
+          res.action(node.platform_family?('debian') ? :purge : :remove)
         end
       end
 
@@ -161,21 +187,34 @@ module PoiseLanguages
       #
       # @param action [Symbol] Action to run on all package resources.
       # @return [void]
-      def run_package_action(action)
-        package_resources(action).each do |resource|
-          # Reset it so we have a clean baseline.
-          resource.updated_by_last_action(false)
-          # Grab the provider.
-          provider = resource.provider_for_action(action)
-          provider.action = action
-          # Check the candidate version if needed. With a manual package_version
-          # you get whatever you asked for.
-          patch_load_current_resource!(provider, new_resource.version) unless new_resource.package_version
-          # Run our action.
-          Chef::Log.debug("[#{new_resource.parent}] Running #{provider} with #{action}")
-          provider.run_action(action)
-          # Check updated flag.
-          new_resource.updated_by_last_action(true) if resource.updated_by_last_action?
+      def run_action_hack
+        # If new_resource.package_version is set, skip this madness.
+        return if new_resource.package_version
+
+        # Process every resource in the current collection, which is bounded
+        # by notifying_block.
+        run_context.resource_collection.each do |resource|
+          # Only apply to things we tagged above.
+          next unless resource.respond_to?(:apply_action_hack?) && resource.apply_action_hack?
+
+          Array(resource.action).each do |action|
+            # Reset it so we have a clean baseline.
+            resource.updated_by_last_action(false)
+            # Grab the provider.
+            provider = resource.provider_for_action(action)
+            provider.action = action
+            # Inject our check for the candidate version. This will actually
+            # get run during run_action below.
+            patch_load_current_resource!(provider, new_resource.version)
+            # Run our action.
+            Chef::Log.debug("[#{new_resource.parent}] Running #{provider} with #{action}")
+            provider.run_action(action)
+            # Check updated flag.
+            new_resource.updated_by_last_action(true) if resource.updated_by_last_action?
+          end
+
+          # Make sure the resource doesn't run again when notifying_block ends.
+          resource.action(:nothing)
         end
       end
 
