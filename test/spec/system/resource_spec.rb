@@ -35,22 +35,6 @@ describe PoiseLanguages::System::Resource do
     let(:chefspec_options) { {platform: 'ubuntu', version: '16.04'} }
     before do
       # Stubs load load_current_resource for apt_package.
-#       allow_any_instance_of(Chef::Provider::Package::Apt).to receive(:shell_out).with('apt-cache', 'policy', 'mylang', any_args).and_return(double(stdout: <<-EOH, error!: nil))
-# mylang:
-#   Installed: (none)
-#   Candidate: 1.2.3-1
-#   Version table:
-#      1.2.3-1 500
-#         500 http://archive.ubuntu.com/ubuntu xenial/main amd64 Packages
-# EOH
-#       allow_any_instance_of(Chef::Provider::Package::Apt).to receive(:shell_out).with('apt-cache', 'policy', 'mylang-dev', any_args).and_return(double(stdout: <<-EOH, error!: nil))
-# mylang-dev:
-#   Installed: (none)
-#   Candidate: 1.2.3-1
-#   Version table:
-#      1.2.3-1 500
-#         500 http://archive.ubuntu.com/ubuntu xenial/main amd64 Packages
-# EOH
       allow_any_instance_of(Chef::Provider::Package::Apt).to receive(:shell_out) do |this, *args|
         args.pop if args.last.is_a?(Hash)
         args = Shellwords.split(args.first) if args.size == 1 && args.first.is_a?(String)
