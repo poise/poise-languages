@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.1
+
+* Fix the SCL repository enable command for RHEL.
+* Internal refactoring of the system package installer.
+
 ## v2.1.0
 
 * Allow customizing properties on the system package install resource via a block
