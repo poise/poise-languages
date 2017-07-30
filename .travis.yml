@@ -21,10 +21,13 @@ matrix:
       gemfile: test/gemfiles/chef-13.gemfile
     - rvm: 2.1.4
       gemfile: test/gemfiles/chef-12.1.gemfile
+      dist: precise
     - rvm: 2.1.4
       gemfile: test/gemfiles/chef-12.2.gemfile
+      dist: precise
     - rvm: 2.1.4
       gemfile: test/gemfiles/chef-12.3.gemfile
+      dist: precise
     - rvm: 2.1.6
       gemfile: test/gemfiles/chef-12.4.gemfile
     - rvm: 2.1.6
