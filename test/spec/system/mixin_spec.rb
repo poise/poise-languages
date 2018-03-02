@@ -119,7 +119,7 @@ describe PoiseLanguages::System::Mixin do
   end # /describe #system_package_candidates
 
   describe '#system_package_name' do
-    let(:chefspec_options) { {platform: 'debian', version: '7.0'} }
+    let(:chefspec_options) { {platform: 'debian', version: '7.3.1611'} }
     let(:version) { '' }
     let(:test_provider) { provider(:poise_test).new(nil, chef_run.run_context) }
     provider(:poise_test) do
@@ -166,7 +166,7 @@ describe PoiseLanguages::System::Mixin do
     end # /context with version 2.6
 
     context 'on an unknown platform' do
-      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
       it { is_expected.to eq 'python' }
     end # /context on an unknown platform
 
@@ -196,7 +196,7 @@ describe PoiseLanguages::System::Mixin do
     subject { provider(:poise_test).provides_auto?(chef_run.node, nil) }
 
     context 'on CentOS' do
-      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
       it { is_expected.to be true }
     end # /context on CentOS
 

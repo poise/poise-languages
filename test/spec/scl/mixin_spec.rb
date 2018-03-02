@@ -220,7 +220,7 @@ EOH
     subject { provider(:poise_test).send(:find_scl_package, chef_run.node, version) }
 
     context 'on CentOS 7 with no version' do
-      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
       it do
         is_expected.to include({
           version: '3.4.2',
@@ -232,7 +232,7 @@ EOH
 
     context 'on CentOS 7 with a version' do
       let(:version) { '3.3' }
-      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
       it do
         is_expected.to include({
           version: '3.3.2',
@@ -243,7 +243,7 @@ EOH
     end # /context on CentOS 7 with a version
 
     context 'on CentOS 6 with no version' do
-      let(:chefspec_options) { {platform: 'centos', version: '6.0'} }
+      let(:chefspec_options) { {platform: 'centos', version: '6.8'} }
       it do
         is_expected.to include({
           version: '3.3.2',
@@ -255,7 +255,7 @@ EOH
 
     context 'on CentOS 6 with a version' do
       let(:version) { '3.3' }
-      let(:chefspec_options) { {platform: 'centos', version: '6.0'} }
+      let(:chefspec_options) { {platform: 'centos', version: '6.8'} }
       it do
         is_expected.to include({
           version: '3.3.2',
@@ -270,7 +270,7 @@ EOH
         include described_class
         scl_package('3.4.2', 'rh-python34')
       end
-      let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+      let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
       it do
         is_expected.to include({
           version: '3.4.2',

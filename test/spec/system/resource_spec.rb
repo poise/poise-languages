@@ -156,7 +156,7 @@ EOH
   end # /context on Ubuntu
 
   context 'on CentOS' do
-    let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+    let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
     before do
       yum_cache = double('YumCache')
       allow(yum_cache).to receive(:yum_binary=)

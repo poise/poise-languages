@@ -19,7 +19,7 @@ require 'spec_helper'
 describe PoiseLanguages::Scl::Resource do
   step_into(:poise_languages_scl)
   step_into(:ruby_block)
-  let(:chefspec_options) { {platform: 'centos', version: '7.0'} }
+  let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
   let(:yum_cache) { double('yum_cache', reload: nil) }
   before do
     allow(Chef::Provider::Package::Yum::YumCache).to receive(:instance).and_return(yum_cache)
