@@ -119,7 +119,7 @@ describe PoiseLanguages::System::Mixin do
   end # /describe #system_package_candidates
 
   describe '#system_package_name' do
-    let(:chefspec_options) { {platform: 'debian', version: '7.3.1611'} }
+    let(:chefspec_options) { {platform: 'debian', version: '7.0'} }
     let(:version) { '' }
     let(:test_provider) { provider(:poise_test).new(nil, chef_run.run_context) }
     provider(:poise_test) do
