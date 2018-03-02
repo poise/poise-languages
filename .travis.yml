@@ -77,6 +77,6 @@ matrix:
     - rvm: 2.4.2
       gemfile: test/gemfiles/chef-13.6.gemfile
     - rvm: 2.4.3
-      gemfile: test/gemfiles/chef-13.7.gemfile
+      gemfile: test/gemfiles/chef-13.8.gemfile
     - rvm: 2.5.0
       gemfile: test/gemfiles/master.gemfile
