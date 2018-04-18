@@ -86,7 +86,7 @@ describe PoiseLanguages::Scl::Mixin do
   end # /describe #scl_package
 
   describe '#scl_folder' do
-    let(:test_provider) { provider(:poise_test).new(nil, nil) }
+    let(:test_provider) { provider(:poise_test).new(resource(:poise_test).new('test'), nil) }
     subject { test_provider.send(:scl_folder) }
     before do
       allow(test_provider).to receive(:scl_package).and_return({name: 'python34'})
@@ -96,7 +96,7 @@ describe PoiseLanguages::Scl::Mixin do
   end # /describe #scl_folder
 
   describe '#scl_environment' do
-    let(:test_provider) { provider(:poise_test).new(nil, nil) }
+    let(:test_provider) { provider(:poise_test).new(resource(:poise_test).new('test'), nil) }
     subject { test_provider.send(:scl_environment) }
     before do
       allow(test_provider).to receive(:scl_package).and_return({name: 'python34'})
@@ -114,7 +114,7 @@ describe PoiseLanguages::Scl::Mixin do
       allow(File).to receive(:exist?).with('/test/enable').and_return(true)
       allow(IO).to receive(:readlines).with('/test/enable').and_return(content.split(/\n/))
     end
-    subject { provider(:poise_test).new(nil, nil).send(:parse_enable_file, '/test/enable') }
+    subject { provider(:poise_test).new(resource(:poise_test).new('test'), nil).send(:parse_enable_file, '/test/enable') }
 
     context 'with an empty file' do
       it { is_expected.to eq({}) }

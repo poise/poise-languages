@@ -114,14 +114,14 @@ describe PoiseLanguages::System::Mixin do
   end # /describe #uninstall_system_packages
 
   describe '#system_package_candidates' do
-    subject { provider(:poise_test).new(nil, nil).send(:system_package_candidates, '') }
+    subject { provider(:poise_test).new(resource(:poise_test).new('test'), nil).send(:system_package_candidates, '') }
     it { expect { subject }.to raise_error NotImplementedError }
   end # /describe #system_package_candidates
 
   describe '#system_package_name' do
     let(:chefspec_options) { {platform: 'debian', version: '7.11'} }
     let(:version) { '' }
-    let(:test_provider) { provider(:poise_test).new(nil, chef_run.run_context) }
+    let(:test_provider) { provider(:poise_test).new(resource(:poise_test).new('test'), chef_run.run_context) }
     provider(:poise_test) do
       include described_class
       packages('python', {
@@ -184,7 +184,7 @@ describe PoiseLanguages::System::Mixin do
   end # /describe #system_package_name
 
   describe '#system_dev_package_overrides' do
-    subject { provider(:poise_test).new(nil, nil).send(:system_dev_package_overrides) }
+    subject { provider(:poise_test).new(resource(:poise_test).new('test'), nil).send(:system_dev_package_overrides) }
     it { is_expected.to eq({}) }
   end # /describe #system_dev_package_overrides
 

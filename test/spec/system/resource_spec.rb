@@ -158,14 +158,25 @@ EOH
   context 'on CentOS' do
     let(:chefspec_options) { {platform: 'centos', version: '7.3.1611'} }
     before do
-      yum_cache = double('YumCache')
-      allow(yum_cache).to receive(:yum_binary=)
-      allow(yum_cache).to receive(:disable_extra_repo_control)
-      allow(yum_cache).to receive(:package_available?).and_return(false)
-      allow(yum_cache).to receive(:package_available?).with(/^mylang(-devel)?$/).and_return(true)
-      allow(yum_cache).to receive(:installed_version).with(/^mylang(-devel)?$/, nil).and_return(nil)
-      allow(yum_cache).to receive(:candidate_version).with(/^mylang(-devel)?$/, nil).and_return('1.2.3')
-      allow(Chef::Provider::Package::Yum::YumCache).to receive(:instance).and_return(yum_cache)
+      if defined?(Chef::Provider::Package::Yum::PythonHelper.instance)
+        # New-fangled PythonHelper (Chef 14+).
+        python_helper = double('PythonHelper')
+        allow(Chef::Provider::Package::Yum::PythonHelper).to receive(:instance).and_return(python_helper)
+        allow(python_helper).to receive(:package_query).with(:whatinstalled, 'mylang', version: nil, arch: nil).and_return(Chef::Provider::Package::Yum::Version.new('mylang', nil, nil))
+        allow(python_helper).to receive(:package_query).with(:whatinstalled, 'mylang-devel', version: nil, arch: nil).and_return(Chef::Provider::Package::Yum::Version.new('mylang-devel', nil, nil))
+        allow(python_helper).to receive(:package_query).with(:whatavailable, 'mylang', version: nil, arch: nil, options: nil).and_return(Chef::Provider::Package::Yum::Version.new('mylang', '0:1.2.3.el7', 'i386'))
+        allow(python_helper).to receive(:package_query).with(:whatavailable, 'mylang-devel', version: nil, arch: nil, options: nil).and_return(Chef::Provider::Package::Yum::Version.new('mylang-devel', '0:1.2.3.el7', 'i386'))
+      else
+        # Old-school yum cache.
+        yum_cache = double('YumCache')
+        allow(yum_cache).to receive(:yum_binary=)
+        allow(yum_cache).to receive(:disable_extra_repo_control)
+        allow(yum_cache).to receive(:package_available?).and_return(false)
+        allow(yum_cache).to receive(:package_available?).with(/^mylang(-devel)?$/).and_return(true)
+        allow(yum_cache).to receive(:installed_version).with(/^mylang(-devel)?$/, nil).and_return(nil)
+        allow(yum_cache).to receive(:candidate_version).with(/^mylang(-devel)?$/, nil).and_return('1.2.3')
+        allow(Chef::Provider::Package::Yum::YumCache).to receive(:instance).and_return(yum_cache)
+      end
     end
 
     context 'action :install' do
